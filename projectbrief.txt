@@ -1,0 +1,1082 @@
+PROJECT: Streets of Rogue 1.5 / More Bullshit Edition
+
+GOAL
+
+I want to explore whether Streets of Rogue 1 can be expanded into something that feels like “Streets of Rogue 1.5.”
+
+I am NOT trying to recreate Streets of Rogue 2.
+
+I am NOT trying to add:
+- cars
+- giant open-world systems
+- farming
+- weather simulation
+- sprawling persistent-world mechanics
+- complicated city simulation
+- anything that explodes scope into a multi-year sequel
+
+The core idea is:
+
+Take Streets of Rogue 1 as it already exists, and dramatically increase the number of nouns, verbs, situations, delayed consequences, environmental interactions, and emergent stories.
+
+The target feeling is:
+
+“I have no idea what absurd thing is about to happen, but it emerged naturally from a bunch of simple systems colliding.”
+
+Think:
+- Streets of Rogue 1
+- Mosa Lina
+- immersive-sim problem solving
+- systemic comedy
+- occasional unfair/impossible situations are acceptable
+- emergent stories are more important than perfect balance
+
+I am explicitly OK with:
+- some situations being unwinnable
+- chaos
+- balance weirdness
+- accidental interactions
+- NPCs doing stupid things
+- systems colliding in unexpected ways
+
+I do NOT want everything sanded down into polished, predictable content.
+
+A useful design mantra:
+
+“Add systems that create stories, not just content.”
+
+--------------------------------------------------
+CORE DESIGN PRINCIPLES
+--------------------------------------------------
+
+1. EXPAND EXISTING SYSTEMS BEFORE INVENTING NEW ONES
+
+If the game already understands:
+- NPCs
+- factions
+- hostility
+- ownership
+- doors
+- alarms
+- hacking
+- status effects
+- bribery
+- items
+- explosions
+- liquids
+- electricity
+- crime
+- shops
+- quests
+- followers
+- pathfinding
+- witnesses
+- cops
+- gang relationships
+- health
+- poisoning
+- traits
+- charisma
+
+then prefer adding new content that plugs into those systems.
+
+Example:
+
+Do not build a giant new simulation layer for a refrigerator.
+
+Instead, make refrigerators interact with:
+- hacking
+- electricity
+- ownership
+- food
+- poisoning
+- explosions
+- noise
+- NPC reactions
+- theft
+- status effects
+
+The goal is combinatorial depth.
+
+2. ENVIRONMENT IS MORE IMPORTANT THAN MORE CHARACTER CLASSES
+
+There are already lots of custom characters and workshop characters.
+
+I am much more interested in:
+- new buildings
+- new interactive props
+- new services
+- new environmental hazards
+- new delayed events
+- new NPC appointments
+- new reasons for existing NPCs to collide
+
+3. DELAYED CONSEQUENCES ARE EXTREMELY VALUABLE
+
+SOR already does immediate chaos well.
+
+I want more:
+“Wait, why is THAT GUY coming toward me?”
+
+Examples:
+- someone you called arrives later
+- a delivery appears later
+- a date eventually shows up
+- a cop responds to a tip later
+- an NPC you angered sends someone after you
+- a courier gets intercepted
+- a hired helper arrives after the situation has already changed
+
+This is fertile territory for emergent comedy.
+
+4. FAILURE SHOULD OFTEN BE BENIGN
+
+If a weird combination happens:
+- unsupported interaction -> nothing happens
+- broken pathfinding -> log it
+- strange outcome -> maybe funny
+- impossible level -> acceptable
+- balance disaster -> often acceptable
+
+Do not over-engineer toward perfect solvability.
+
+5. THE WORLD SHOULD FEEL MORE ALIVE, NOT MORE COMPLICATED TO CONTROL
+
+I do NOT want:
+- heavy crafting
+- giant menus
+- long progression trees
+- complicated resource management
+- MMO-style task systems
+
+I DO want:
+- more things happening
+- more reasons to react
+- more environmental surprise
+- more strange NPC behavior
+- more cascading consequences
+
+--------------------------------------------------
+INITIAL ENVIRONMENT IDEAS
+--------------------------------------------------
+
+These seem relatively plausible within the existing engine because they mostly reuse rooms, counters, shelves, NPCs, shops, doors, computers, etc.
+
+BUILDINGS / LOCATIONS
+
+DMV
+- waiting chairs
+- clerk counters
+- ticket-number machine
+- computers
+- back-office area
+- possible permit/ID mechanics
+- bribery
+- ticket theft
+- skipping the line
+- hacking the queue
+- forging documents
+- getting behind the counter causes hostility
+- bureaucratic side quests
+- intentionally boring location that becomes funny because of SOR systems
+
+Pet Store
+- cages
+- aquariums
+- pet food
+- pet NPCs
+- staff
+- pet adoption/purchase
+- aquarium destruction
+- loose animals
+- water + electricity interactions
+- escaped pets creating chaos
+
+Pawn Shop
+- buy/sell items
+- stolen goods
+- suspicious inventory
+- haggling
+- fencing stolen items
+- maybe stolen quest items show up here
+- maybe shopkeeper buys unusual categories others will not
+
+Media Store
+- electronics
+- TVs
+- speakers
+- music gear
+- media items
+- possible alarms/security
+- loud audio distractions
+
+Car Audio Store
+Important:
+There are no cars, and that is fine.
+
+The store could sell:
+- speakers
+- stereo systems
+- batteries
+- amplifiers
+- giant subwoofers
+- wiring
+- microphones
+
+These can become:
+- distractions
+- noise sources
+- portable hazards
+- electrical objects
+- ridiculous weapons
+- room-shaking effects
+
+Library
+- bookshelves
+- computers
+- quiet-area behavior
+- librarian NPC
+- restricted back room
+- researching information
+- borrowing/stolen books
+- hacking public computers
+- NPC hostility for noise
+- maybe temporary knowledge/status buffs
+
+Laundromat
+- washers/dryers
+- flooding
+- electrical hazards
+- hiding items in machines
+- stealing clothes
+- detergent
+- dryer fires
+
+Gym
+- treadmills/stairmasters
+- weights
+- showers
+- locker room
+- gym NPCs
+- physical buffs
+- equipment sabotage
+- loud music
+
+Arcade
+- arcade cabinets
+- prize counter
+- tokens
+- hacking machines
+- gambling-adjacent minigame systems
+- noise
+- teenagers / weird NPC mix
+
+Storage Facility
+- many locked units
+- random loot
+- suspicious contents
+- ownership
+- keys
+- burglary
+- illegal goods
+
+Clinic / Urgent Care
+- healing
+- drugs/medicine
+- waiting room
+- staff
+- restricted supply storage
+- possible fake prescriptions
+- chaos if hostile NPCs arrive
+
+Motel
+- many small rooms
+- random occupants
+- privacy
+- suspicious behavior
+- temporary rendezvous location
+- police visits
+- rooms used for NPC meetings
+
+--------------------------------------------------
+INTERACTIVE PROP IDEAS
+--------------------------------------------------
+
+The biggest win may come from turning boring props into “interaction hubs.”
+
+STAIRMASTER / TREADMILL
+Possible interactions:
+- use normally
+- temporary stamina/fitness buff
+- hack to maximum speed
+- overload
+- shove someone onto it
+- cause injury
+- scientist modifies it
+- athlete/jock reacts differently
+- electricity malfunction
+- fire
+- loud noise
+- NPC-specific reactions
+
+VENDING MACHINE
+- purchase
+- shake
+- tip
+- hack
+- poison contents
+- electrify
+- break glass
+- hide item
+- jam
+- NPC tries to steal from it
+
+ATM
+- withdraw
+- hack
+- steal card
+- skimmer
+- dye pack
+- alarm
+- security response
+- fake card / forged credentials
+
+COPIER
+- copy documents
+- counterfeit ID
+- create fake permit
+- jam
+- make flyers
+- noise
+- maybe comic behavior such as copying body parts
+- generate incriminating material
+
+DISHWASHER
+- hide item
+- hide person if absurdly possible
+- flood room
+- detergent cloud
+- electrify water
+- destroy evidence
+- damage certain items
+
+REFRIGERATOR
+Expand beyond “food container.”
+
+Possible:
+- hack temperature
+- freeze contents
+- overheat motor
+- spoil food
+- hide inside
+- electrocution
+- coolant leak
+- explode
+- NPC gets angry over stolen food
+- scientist creates weird chemical reaction
+- robot interacts differently
+- freezer can create ice hazard
+
+BREAKER BOX
+- cut building power
+- overload circuits
+- disable cameras
+- disable doors
+- create sparks
+- electrify rooms
+- reset systems
+- NPC repair response
+
+SPRINKLER CONTROLS
+- activate
+- flood floors
+- interact with electricity
+- put out fire
+- trigger alarms
+- annoy NPCs
+- create slippery floor
+
+AQUARIUM
+This is a particularly important pet-store/environment idea.
+
+Normal:
+- decorative fish/shrimp
+
+When broken:
+- water spreads
+- fish/shrimp spawn as tiny loose entities
+- they flop around
+- NPCs react
+- pets may eat them
+- gorillas may eat them
+- electricity becomes dangerous
+- slippery floor
+- some NPCs try to rescue them
+- some ignore them
+- some steal them
+- aquarium owner becomes hostile
+
+This does NOT need sophisticated fish AI.
+
+The humor comes from:
+“aquarium broke, now the room is wet and full of shrimp.”
+
+--------------------------------------------------
+PETS
+--------------------------------------------------
+
+Pets seem potentially valuable as low-complexity mobile chaos generators.
+
+I do NOT necessarily need deep pet simulation.
+
+Pets can mostly be lightweight NPCs with simple rules.
+
+DOGS
+- follow owner
+- bark at enemies
+- chase thrown food
+- attack certain hostile NPCs
+- wander if owner dies
+- get distracted
+- possibly retrieve items
+
+CATS
+- wander
+- ignore commands
+- scratch
+- enter restricted rooms
+- trigger alarms
+- steal/eat food
+- annoy NPCs
+
+PARROTS
+- repeat dialogue/noises
+- trigger noise reactions
+- maybe repeat incriminating phrases
+
+HAMSTERS
+- escape
+- run around
+- clog machines
+- tiny chaos
+
+SNAKES
+- panic reactions
+- bite
+- escape cages
+
+FISH / SHRIMP
+- mostly environmental
+- floppy entities after aquarium breaks
+- edible by some NPCs/animals
+- create absurd clutter
+
+The point:
+Pets are not companions first.
+
+They are uncontrolled actors that make existing systems less predictable.
+
+--------------------------------------------------
+SERVICES / PHONE APPS
+--------------------------------------------------
+
+This may be one of the most promising categories.
+
+The phone could become a way to summon delayed chaos.
+
+FOOD DELIVERY
+Player orders food.
+
+Later:
+- courier spawns
+- attempts to reach player
+- can get lost
+- can get robbed
+- can die
+- can be intercepted
+- can trigger gang/cop reactions
+- can show up during a fight
+- food can be stolen
+- wrong order possible
+- courier may refuse dangerous location
+
+This should physically occur in the game world.
+
+AMAZON-LIKE DELIVERY SERVICE
+Order items.
+
+Later:
+- delivery NPC appears
+- attempts to deliver
+- item may be intercepted
+- cops may inspect suspicious package
+- thief may steal it
+- delivery may be dropped somewhere unsafe
+- player may no longer be at location
+- package can arrive during chaos
+
+Possible items:
+- medicine
+- lockpicks
+- bat
+- electronics
+- weird appliances
+- food
+- armor
+- suspicious goods
+- live animal
+- oversized useless object
+
+TASKRABBIT / HANDYMAN
+Hire someone to:
+- repair
+- unlock
+- install
+- move object
+- disable something
+- sabotage something
+- carry something
+
+They physically arrive.
+
+POLICE TIP LINE
+Player anonymously reports:
+- NPC
+- building
+- illegal activity
+
+Police response arrives later.
+
+Potential for:
+- framing enemies
+- unintended witnesses
+- player getting caught too
+- police escalating unrelated chaos
+
+BLACK MARKET DELIVERY
+Order shady goods.
+
+Possible outcomes:
+- seller arrives
+- police follow them
+- rival gang follows them
+- item is fake
+- seller robs player
+- seller becomes quest giver
+- meeting goes bad
+
+COURIER SERVICE
+Send item to another NPC.
+
+Courier physically carries it.
+
+Could:
+- lose it
+- steal it
+- die
+- get intercepted
+- deliver wrong item
+- trigger quest consequences
+
+--------------------------------------------------
+DATING / HOOKUP APP
+--------------------------------------------------
+
+This is one of the strongest ideas.
+
+The mechanic should use charisma.
+
+Basic concept:
+
+If player has sufficient charisma, they can swipe/use a dating app.
+
+A matched NPC may agree to meet at:
+- bar
+- motel
+- apartment
+- restaurant
+- random safe-ish location
+
+The important thing:
+Success is NOT binary.
+
+The app exists to inject unpredictable NPCs into the world later.
+
+Possible outcomes:
+
+FLAKE
+- says “omw”
+- never arrives
+
+LATE
+- arrives much later than expected
+
+NORMAL
+- arrives
+- hangs out
+- may temporarily follow player
+
+HELPFUL
+- brings healing
+- brings weapon
+- brings item
+- gives useful information
+
+NEEDY
+- immediately gives player a quest
+
+THIEF
+- tries to steal something
+
+ROBBER
+- arrives intending to rob player
+
+COP
+- secretly police
+- may react to player crimes
+
+CRIMINAL
+- arrives while being chased
+
+GANG MEMBER
+- brings faction consequences
+
+MARRIED
+- jealous partner appears later
+
+PARTY PERSON
+- brings friends
+
+CATFISH
+- very different NPC type than expected
+
+PSYCHO
+- starts a fight
+
+STALKER
+- follows player after meeting
+
+SCAMMER
+- asks for money/item
+
+RIVAL DATE
+- becomes hostile if player invited someone else
+
+MULTIPLE DATES
+This should be allowed.
+
+Example:
+Player invites two people to same location.
+
+Person A arrives first.
+
+Person B arrives later.
+
+They may:
+- fight
+- become friends
+- ignore each other
+- both turn on player
+- attract gang/cops
+- start separate quests
+
+One can be a gang member.
+One can belong to opposing gang.
+
+That is exactly the kind of emergent mess I want.
+
+Charisma should affect:
+- chance of match
+- quality of match
+- likelihood of useful outcome
+- maybe how many simultaneous matches are possible
+
+But even high charisma should not guarantee safety.
+
+--------------------------------------------------
+MOSA LINA PRINCIPLE
+--------------------------------------------------
+
+I am interested in borrowing part of Mosa Lina’s philosophy:
+
+Do not guarantee that every generated situation is cleanly solvable.
+
+SOR already gives the player tools.
+
+If a bizarre generated level creates:
+- bad layout
+- wrong tools
+- hostile factions
+- strange object combinations
+- no obvious route
+
+that may be OK.
+
+I do NOT want the game to constantly rescue the player from weird generation.
+
+Sometimes:
+- you die
+- you leave
+- you improvise
+- you discover an absurd exploit
+- the level is effectively doomed
+
+That can be part of the charm.
+
+--------------------------------------------------
+EMERGENT-STORY EXAMPLES
+--------------------------------------------------
+
+The kind of story I want:
+
+“I ordered tacos. The delivery driver got mugged by a gang. I called the cops. My Tinder date showed up at the same time. She was secretly in the rival gang. The cops arrested her. I stole my tacos back and discovered the delivery driver had picked up my Amazon package too.”
+
+Another:
+
+“I broke an aquarium in the pet store. The water hit a damaged vending machine. A cop got shocked. Someone slipped on a shrimp. A dog ate the evidence.”
+
+Another:
+
+“I invited two dates to a motel. One was a thief and the other was a cop. The thief stole from the cop. I hid in a washing machine.”
+
+That is the target experience.
+
+--------------------------------------------------
+TECHNICAL PHILOSOPHY
+--------------------------------------------------
+
+Before writing code:
+
+1. Inspect the existing Streets of Rogue mod project.
+2. Determine what framework this project currently uses.
+3. Identify whether it is using:
+   - BepInEx
+   - Harmony
+   - RogueLibs
+   - custom patching
+   - other mod framework
+4. Map the existing extension points.
+5. Identify what can be implemented cleanly without invasive engine rewrites.
+6. Separate:
+   - easy
+   - medium
+   - hard
+   - probably-not-worth-it
+
+I want architecture-first reconnaissance before implementation.
+
+Please inspect the repository and answer:
+
+A. What existing systems are easiest to extend?
+
+B. How are custom:
+- items
+- NPCs
+- buildings/chunks
+- traits
+- status effects
+- interactions
+- quests
+- shops
+- dialogue
+- UI
+- timed events
+implemented?
+
+C. Can we dynamically spawn NPCs after level start?
+
+D. Can we schedule delayed events?
+
+E. Can we create new phone/menu interactions?
+
+F. Can we create new environmental objects?
+
+G. Can new objects participate in:
+- hacking
+- damage
+- electricity
+- water
+- fire
+- ownership
+- NPC reactions?
+
+H. How hard would pets be?
+
+I. How hard would an aquarium-break system be?
+
+J. How hard would a dating-app system be?
+
+K. How hard would delivery services be?
+
+L. Can custom chunks/buildings be shipped with the mod?
+
+M. Can Steam Workshop content and code mods coexist?
+
+N. Can we create data-driven definitions so that adding content later does not require tons of handwritten boilerplate?
+
+--------------------------------------------------
+DESIRED ARCHITECTURE
+--------------------------------------------------
+
+If feasible, I would prefer a data-driven system.
+
+For example:
+
+Object definition:
+- ID
+- sprite
+- health
+- tags
+- interaction verbs
+- hack options
+- break behavior
+- status effects
+- spawn table
+- NPC reactions
+
+Service definition:
+- ID
+- eligibility rules
+- cost
+- delay range
+- spawn NPC type
+- destination behavior
+- success/failure outcomes
+- event weights
+
+Dating profile definition:
+- NPC archetype
+- charisma threshold
+- match weight
+- possible behaviors
+- faction
+- arrival delay
+- risk tags
+- reward tags
+
+Pet definition:
+- species
+- owner-follow behavior
+- aggression
+- curiosity
+- food preference
+- panic behavior
+- interaction tags
+
+I would like to be able to add “one more stupid thing” without writing a giant class every time.
+
+--------------------------------------------------
+AI-ASSISTED DEVELOPMENT IDEA
+--------------------------------------------------
+
+AI should help BUILD the mod.
+
+I do not necessarily want LLMs running inside the game.
+
+Useful AI roles:
+- generate repetitive glue code
+- generate item definitions
+- generate interaction tables
+- generate NPC variants
+- generate room/chunk concepts
+- produce dialogue variants
+- generate test cases
+- identify interaction bugs
+- create data definitions
+- help inspect decompiled APIs
+- refactor repetitive code
+- generate sprites or sprite concepts externally if appropriate
+
+The magic should still come from deterministic game systems.
+
+--------------------------------------------------
+FIRST PROTOTYPE
+--------------------------------------------------
+
+Do NOT start with the giant roadmap.
+
+Start with one vertical slice.
+
+Suggested first prototype:
+
+BUILDING:
+Gym
+
+OBJECT:
+Stairmaster
+
+NPC:
+Gym Bro
+
+STATUS:
+Cardio High
+
+Possible Stairmaster behavior:
+- normal use
+- gain temporary buff
+- hack to unsafe speed
+- damage user
+- overload
+- electrical malfunction
+- NPC-specific reactions
+- noise
+- possible fire
+
+The purpose of this prototype is NOT to make a gym.
+
+The purpose is to answer:
+
+“How painful is it to add one new environmental object with multiple systemic interactions?”
+
+If this can be done cleanly, then the project is viable.
+
+--------------------------------------------------
+SECOND PROTOTYPE
+--------------------------------------------------
+
+Pet Store
+
+Include:
+- aquarium
+- fish/shrimp entities
+- aquarium destruction
+- water
+- basic pet NPC
+- pet shopkeeper
+
+The key test:
+
+Can we make:
+“break aquarium -> water + loose fish/shrimp -> NPC reactions -> electricity interaction”
+
+without building an entirely new engine?
+
+--------------------------------------------------
+THIRD PROTOTYPE
+--------------------------------------------------
+
+Phone service:
+
+Food Delivery
+
+Flow:
+1. Player orders food.
+2. Timer starts.
+3. Delivery NPC spawns later.
+4. NPC navigates toward player or selected destination.
+5. Courier can be interrupted by normal world events.
+6. Courier delivers item if they survive/reach player.
+7. Failure can happen naturally.
+
+This tests:
+- UI
+- delayed events
+- NPC spawning
+- pathfinding
+- service definitions
+- emergent interruption
+
+--------------------------------------------------
+FOURTH PROTOTYPE
+--------------------------------------------------
+
+Dating App
+
+Flow:
+1. Player opens app.
+2. Requires charisma threshold.
+3. Select/swipe.
+4. Weighted match outcome.
+5. NPC scheduled.
+6. NPC arrives later.
+7. NPC has one randomly selected behavior profile.
+8. Multiple simultaneous dates allowed.
+
+Start with only these outcomes:
+- normal
+- flake
+- thief
+- helpful
+- gang member
+- cop
+- jealous partner
+
+Do not overbuild this initially.
+
+--------------------------------------------------
+SCOPE RULE
+--------------------------------------------------
+
+Any proposed feature should be judged by:
+
+“How many existing systems does this touch?”
+
+High value:
+One simple thing that interacts with many systems.
+
+Low value:
+One complicated thing that requires its own isolated subsystem.
+
+Example:
+
+GOOD:
+Aquarium
+Because it touches:
+- damage
+- water
+- electricity
+- pets
+- NPC reactions
+- ownership
+- shopkeepers
+
+BAD:
+Full realistic fish simulation
+Because it adds complexity without creating many new stories.
+
+GOOD:
+Food delivery
+Because it touches:
+- NPC spawn
+- navigation
+- items
+- factions
+- combat
+- crime
+- shops
+- timing
+
+BAD:
+Detailed restaurant-management simulator
+
+--------------------------------------------------
+WORKING TITLE
+
+Possible internal names:
+
+- Streets of Rogue 1.5
+- More Bullshit Edition
+- Streets of Variety
+- Streets of Chaos
+- More Streets, More Rogue
+- Rogue City Expansion
+
+Do not worry about final branding yet.
+
+--------------------------------------------------
+WHAT I WANT FROM CODEX RIGHT NOW
+
+Do not start implementing everything.
+
+First:
+
+1. Inspect this repository.
+2. Explain the current mod architecture.
+3. Identify the important game/mod APIs.
+4. Tell me which of the prototype ideas are easiest.
+5. Tell me what is genuinely difficult.
+6. Recommend the smallest viable vertical slice.
+7. Produce a concrete implementation plan.
+8. Only after that, start coding the first prototype.
+
+Please favor practical experimentation over giant speculative architecture.

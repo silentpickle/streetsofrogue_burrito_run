@@ -1,0 +1,6 @@
+.tools/
+.runtime/
+**/bin/
+**/obj/
+.DS_Store
+*.user

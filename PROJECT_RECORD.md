@@ -1,0 +1,183 @@
+# Streets of Rogue 1.5 / Burrito Run — project record
+
+Last updated: 2026-10-01. This is a record of the work and evidence available in this directory, not a claim that every idea in `projectbrief.txt` has been implemented. It is intended to let a future developer reproduce the playable slice, understand why it was built this way, and resume without repeating the failed paths.
+
+**October 1 follow-on:** after the first delivery playtest, the user observed that the courier merely wandered after handoff and a hit caused a standard fight. The new behavior uses native `mustFlee`/`wontFlee` flags, a five-second carried-food panic/drop, and a 20-second test / 45-second normal service cooldown. An after-delivery courier is remembered for 30 seconds so a hit can affect later orders. The player-hit hook logs `BURRITO_COURIER_HIT`.
+
+The initial updated plugin compiled with zero warnings/errors and passed a 25-second startup smoke in `.runtime/logs/plugin-20261001-084308-86865.log`. In live Slums testing, its log recorded `BURRITO_ORDER id=1`, `BURRITO_SPAWN` for courier UID 1316, `BURRITO_ROUTE`, `BURRITO_COURIER_HIT ... phase=carrying cooldown=20`, and `BURRITO_RESULT ... outcome=panicked`. **The player saw the courier flee, return with a “not cool” reaction, and recovered the dropped FUD can with E.** A second hit test recorded `BURRITO_COURIER_HIT id=3`, `outcome=panicked`, then `BURRITO_NOTICE Courier service paused for 15s after an assault.` when another order was attempted; no new `BURRITO_ORDER` followed that attempt. The check is before money subtraction, but the visible cash amount was not independently confirmed. The after-delivery hit case remains unverified.
+
+After that live test, an edge-case fix was compiled and installed: if the courier is lost *before* a food item exists, the $10 order is refunded. The final installed DLL matches its build output by SHA-256, and `.runtime/logs/plugin-20261001-085515-88568.log` contains `BURRITO_SMOKE_PASS` without a plugin error. The refund edge case itself has not been playtested. No armed-courier escalation or smartphone UI has been built.
+
+## 1. Aim and scope
+
+The original brief calls for “Streets of Rogue 1.5”: more interacting nouns, verbs, delayed consequences, environmental surprises, and absurd stories inside Streets of Rogue 1. It explicitly rejects a sprawling Streets of Rogue 2-style sequel, heavy crafting, large menus, and perfect balance. The useful criterion is *stories produced by several existing systems colliding*, not a large count of isolated content additions. The brief suggests a Gym/Stairmaster, Pet Store/Aquarium, Food Delivery, and Dating App as successive probes. The live prototype deliberately took the food-delivery probe first because it could test several high-value engine capabilities with a narrow implementation: an added interaction, payment, delay, dynamic NPC spawn, pathfinding, a physical item, transfer/drop, and native item use. This is a deviation from the brief's suggested prototype order, not a change to its larger ambition.
+
+The user preferred a Workshop/plugin-like route and authorized a larger standalone game only if the installed game proved impractical. The result is **a private code plugin running against the installed Mac game**, not a standalone executable, not a Workshop upload, and not a claim of compatibility with every game version or operating system. No Three.js retheme or reskin was started because the plugin route was viable for this slice.
+
+The requested “Phil/Akshata/Ryan/Peter/Jim/Steve” perspectives guided the work: integration viability, milestones, playtest evidence, fun-versus-feasibility, level-building needs, and implementation. This document records the resulting decisions, not simulated endorsements by actual people with those names. No new level/chunk was needed for the delivery test; it ran in the game's generated Slums level.
+
+## 2. Current result and confidence
+
+| Claim | Status | Evidence / limit |
+| --- | --- | --- |
+| The loader and plugin start in the installed Mac game | Verified | `.runtime/logs/plugin-20261001-061611-78788.log` contains preloader, `BURRITO_BOOT`, and `BURRITO_SMOKE_PASS`. |
+| A normal playable single-player level can show the test panel | Verified by live screen | The October 1 Slums run showed the panel at upper right. |
+| Ordering without $10 is refused without charging | Observed twice | Final live plugin log contains two “You need $10. No money was taken” notices. |
+| Paying $10 schedules a courier, spawns it, routes it, and delivers | Verified once end to end | `.tools/loader/BepInEx/LogOutput.log` contains `BURRITO_ORDER`, `BURRITO_SPAWN`, `BURRITO_ROUTE`, `BURRITO_RESULT ... delivered`. User and assistant observed the courier near the player. |
+| The delivered item is in inventory and can be eaten | Verified in that run | Inventory opened with **Q** and showed a blue/red FUD can in the top row; the user clicked it and confirmed health rose. The exact health delta was not measured. |
+| Original normal saved-game bytes remained unchanged | Verified at last check on October 1 | `cmp` of normal `CloudData/SavedGame.dat` against `.runtime/backups/CloudData-before-prototype/SavedGame.dat` returned 0. This is a point-in-time check, not a proof about all files/future launches. |
+| Courier death, knockout, interception, forced drop, refund across level transition, later levels, co-op, and Workshop packaging | Untested or deliberately unsupported | These need separate scenarios. Co-op/multiplayer is rejected by `CanOrder`. |
+
+The live order's log values were `id=1`, `seed=0`, order target `(77.64, 11.69, 0.00)`, three-second test delay, courier UID `1308`, spawn `(73.44, 6.51)`, route from `(75.04, 7.73, 0.00)`, and outcome `delivered`. These are *one run's* evidence, not guarantees for other seeds. The live log did not show a plugin exception. An earlier **diagnostic forced-start** run did produce a `NullReferenceException`; that path was removed before the successful normal-play test (see §7).
+
+## 3. Files and generated state
+
+Tracked/source-level files in this working directory:
+
+- `projectbrief.txt`: original idea inventory, design philosophy, research questions, and suggested probes. Preserve as the user-supplied source brief.
+- `README.md`: short playable instructions and handoff.
+- `quick-test.command`: double-click launcher adding `--burrito-test` (three-second kitchen delay and test UI).
+- `play-burrito-run.command`: double-click launcher with no test UI (random 45–90-second delay).
+- `scripts/setup.sh`: download pinned BepInEx Mac universal loader, verify SHA-256, unpack locally, build.
+- `scripts/build.sh`: build two .NET Framework 4.7.2 DLLs and copy them into the local loader tree.
+- `scripts/launch.sh`: reject another running game instance, set isolated profile and Steam app ID, launch through BepInEx/Doorstop, capture per-session logs.
+- `src/BurritoRun/Plugin.cs`: BepInEx entry point, notices, test panel, runtime tick, startup smoke mode.
+- `src/BurritoRun/DeliveryService.cs`: single active order and courier lifecycle.
+- `src/BurritoRun/Patches.cs`: Harmony patches for terminal button, naming, native food behavior, and Steam cloud/achievement hooks.
+- `src/BurritoRun.Profile/ProfilePatcher.cs`: BepInEx/Cecil in-memory profile redirection.
+- `src/*/*.csproj`: game/loader assembly references and build targets.
+- `.gitignore`: excludes generated tooling, runtime, and .NET artifacts. **This directory was not a Git repository at the last check** (`git status` returned “not a git repository”). Do not assume commits or a remote exist.
+
+Generated/local-only data:
+
+- `.tools/loader/`: private BepInEx install, plugin/patcher DLLs, active `BepInEx/LogOutput.log`. This is **not** placed in the Steam game directory.
+- `.tools/downloads/`: pinned loader archive and an attempted RogueLibs DLL.
+- `.tools/incompatible/`: rejected RogueLibs assemblies retained for diagnosis, not active plugins.
+- `.tools/dotnet-home/`, `.tools/nuget/`, `src/*/obj/`, `src/*/bin/`: build caches/outputs.
+- `.runtime/profile/`: prototype save/settings profile used by the launchers.
+- `.runtime/backups/CloudData-before-prototype/`: snapshot of original CloudData from before testing. Preserve it.
+- `.runtime/logs/game-*.log`, `console-*.log`, `plugin-*.log`: per-launch game, stdout/stderr, and BepInEx logs. While a game is running, the current plugin events are in `.tools/loader/BepInEx/LogOutput.log`; the dated plugin copy is made when the launcher exits.
+
+Do not publish `.runtime` wholesale: logs may contain personal filesystem paths and Steam diagnostic lines. Do not delete the normal profile, the backup, or the generated profile to “reset” the project without separately inspecting their contents and recovery needs.
+
+## 4. Reproduce the playable slice
+
+Prerequisites for this Mac: installed Streets of Rogue 1 at the path in `scripts/launch.sh`, the local `.tools/loader` already present or an internet-enabled run of `bash scripts/setup.sh`, and .NET SDK 7 for rebuilding (observed `dotnet --version` was `7.0.305`). Build targets `net472` using `Microsoft.NETFramework.ReferenceAssemblies` from NuGet. The plugin references the actual installed game assemblies and the local BepInEx/Harmony assemblies; it does not vendor the game.
+
+1. Close any running Streets of Rogue. Start `quick-test.command` by double-clicking it (macOS may require right-click → Open). Keep its Terminal window open; it is the parent launcher and captures final logs.
+2. From the game's normal menu start a **single-player** run and reach a playable level. Do not use a diagnostic shortcut. The upper-right quick-test panel should appear.
+3. Select **Add $30 test money**, then **Order here ($10)**. The first call should charge $10. The three-second delay is for testing only. You can also use a functional in-game computer and choose **Order Burrito here ($10)**.
+4. Remain near the *original order position* for handoff. The courier is a physical NPC and may be delayed or interrupted by the level. If you move away, delivery logic may drop the food at the order spot. The notices appear at lower left; the panel reports active delivery state.
+5. Press **Q** for inventory. The burrito currently uses the game's blue-and-red **FUD** can icon. Click it while injured to test consumption. **Tab opens the map**, and **I did not open inventory** in the tested setup; those were incorrect initial instructions, corrected after direct observation.
+6. For normal pacing, launch `play-burrito-run.command` instead. It hides the test panel and randomly delays the courier 45–90 seconds. That pacing has not received the same end-to-end playtest.
+
+If the game exits unexpectedly, retain the newest `game-*`, `console-*`, and `plugin-*` logs in `.runtime/logs` and note the immediately preceding action. A build passing does not prove the game UI path. Conversely, a health increase after clicking the FUD can is stronger item-use evidence than a “delivered” log alone.
+
+## 5. Implementation and mechanics
+
+### Loader and profile boundary
+
+`scripts/setup.sh` pins BepInEx 5.4.23.5 Mac universal from its GitHub release and verifies archive SHA-256 `01c2ae782eb016dfd6c345a18dbd2dcafffb3d9d318449d6486689f426b4a323` before extracting it. The observed archive matched. `run_bepinex.sh` is invoked with the loader directory as its working directory because Doorstop's relative dylib resolution on this Mac required that. The game is launched windowed at 1280×720 to support observation. Steam app/game IDs are set to 512900. The build copies `BurritoRun.dll` to `BepInEx/plugins` and `BurritoRun.Profile.dll` to `BepInEx/patchers` in the **project-local** loader tree.
+
+The profile patcher edits the *loaded* `Assembly-CSharp.dll` in memory through Mono.Cecil, not the installed DLL on disk. It scans nested types and method bodies for calls to `UnityEngine.Application.get_persistentDataPath`, replaces those calls with an environment-variable read for `BURRITO_PROFILE_PATH`, and rejects a missing/non-absolute path or zero matching calls. In this installed build the preloader reported **103** redirected calls. This is a targeted safeguard, not a formal proof that every game or third-party path is isolated: calls in other assemblies and hard-coded file paths are outside this scan. The launcher initializes a separate `.runtime/profile` and copies original `GameUnlocks.dat` and `GameSettings.dat` into it once, for familiarity; it does not copy the normal `SavedGame.dat`. `CloudSave` and `SetAchievement` are Harmony-suppressed in the prototype session. Recheck the original profile and all relevant hooks before claiming broader isolation on a new game version.
+
+### Order state machine
+
+`DeliveryService.CanOrder` requires a loaded real local player in a single-player non-homebase/non-tutorial level, a live character, and inventory. Only **one** active order exists at a time. Ordering requires at least $10 in a `Money` inventory item; insufficient funds show a notice and take nothing. A successful order snapshots the player's current position, charges $10 through the game's inventory, and sets a due time based on `Time.time` (which pauses with the game). The random delay uses `System.Random` seeded from the level seed and order ID; test mode overrides it to three seconds.
+
+At the due time, the code asks the game's tile API for a nearby entrance 4–8 world units away and spawns a native `Courier` agent. If no usable entrance is found after three attempts or spawn fails, the order is canceled/refunded. Once the courier is ready, its native inventory receives one namespaced `BurritoRun_Food` item and `agentInteractions.GoHere` routes it to the snapshotted location. The courier carries the actual item; the code does not merely teleport a reward after a timer. It checks the item remains in the courier inventory, whether the courier is alive/active, and whether the target is reached. Near the target, if the original customer is physically near and has room, `GiveItem` transfers the packet; otherwise `DropItem` puts it in the world. A 120-second post-spawn timeout also drops it wherever the courier is stuck. The test panel's **Courier drops package** button forces the same drop path; this scenario has not yet been live-verified.
+
+The code tracks courier UID and a `SpawnedOnce` flag because destroyed Unity objects can compare equal to null. This prevents a duplicate spawn/package after the original courier disappears. Death/knockout relies on the game's native inventory-spill behavior; the code does not mint another packet. It records outcomes such as `delivered`, `dropped`, `stranded`, `interrupted`, `intercepted`, `courier-lost`, and `cancelled`. Their presence in code does **not** mean all were playtested. If a level changes before completion, the order is canceled and normally refunded; if the player is invalid at that moment a pending refund is carried forward in memory to a later playable state. A game process exit does not persist that pending refund; this is a prototype limitation. Death ends an order without a refund. The courier is released to wander after completion. Multiplayer/co-op is intentionally unavailable; synchronization and item authority have not been solved.
+
+### UI and food reuse
+
+Harmony appends a new button to a functional in-game `Computer`'s native interaction list, and intercepts only that button. The on-screen quick-test window is Unity IMGUI and exists only under `--burrito-test`; it is a development affordance, not final game UI or a phone app. Notices are also IMGUI. `NameDB.GetName` supplies item/button text. The custom food ID is temporarily aliased to the game's existing `HotFud` during `InvItem.SetupDetails` and `ItemFunctions.UseItem`, then restored. Thus art and food consumption behavior are native, while the intended item ID/name/description are custom. The successful player health test establishes that this route worked in the tested case. Dietary restrictions are expected from native behavior but were **not separately tested**. There is no bespoke sprite, phone interface, restaurant, recipe system, or custom level.
+
+## 6. Methodology: how the decision was reached
+
+The development method was a constrained vertical slice: inspect the installed executable and managed assemblies, choose the smallest feature exercising multiple existing systems, build a reversible loader outside the install, prove startup and profile separation, then test the *actual game* and update claims only after observation. The original directory contained the brief, not an existing mod codebase or established framework. The installed Mac game's managed assemblies provided the extension surface. The observed Unity version at runtime was `2022.3.60f1`; the current game bundle used `Mirror.dll` for networking. Custom game code therefore needed to be tested against the *installed* assembly set, rather than assumed compatible with older examples.
+
+Two compatibility routes were compared. RogueLibs 4 release-candidate binaries failed on this build: `.runtime/logs/roguelibs-incompatible.log` contains repeated Harmony IL compile errors ending in missing `com.unity.multiplayer-hlapi.Runtime`, whereas this game ships Mirror. The rejected DLLs were moved out of the active loader path into `.tools/incompatible`. This did **not** prove that every RogueLibs version is unusable; it made that particular candidate a poor choice for this prototype. Direct BepInEx + Harmony against the installed game's assemblies loaded cleanly and let the team test the design question immediately. The direct route carries API/version fragility and requires deliberate safety checks; it was chosen for evidence, not as a declaration of permanent architecture.
+
+The slice tests feasibility in tiers: loader bootstrap → in-memory save redirection → plugin startup → native computer button / test UI → game-state gating → paid order → timed spawn → physical NPC/item → navigation and transfer/drop → native item use → interruption. Verification also follows this ladder. A successful build and smoke test covered only the early tiers; the live playtest added delivery and item use. Distinguishing these tiers prevented the prototype from being called “working” when it merely loaded.
+
+## 7. Failed or misleading paths and corrections
+
+- **RogueLibs release-candidate mismatch:** missing old Unity HLAPI assembly at runtime; direct BepInEx/Harmony replaced it. Keep the failure log as evidence, not as an active dependency.
+- **GUI click automation on this Mac:** the game viewport was 1280×720 but the computer-control screenshot included large white multi-display padding. A diagnostic log reported `Input.mousePosition=(-2395,-391)` for a click intended inside the game. Keyboard events reached the game, while remote coordinate clicks were unreliable. The user took over gameplay for the material interaction test. This is a test-control issue, not evidence of broken in-game mouse controls.
+- **Forced-start diagnostic:** a temporary `B`-key path attempted to jump from the title menu into a run and produced a native `NullReferenceException` in `.runtime/logs/game-20261001-061327-78560.log`. That shortcut was removed. The final smoke and successful delivery used the normal game menu. Do not reintroduce the shortcut or misclassify that exception as a failure of normal ordering.
+- **Incorrect inventory guidance:** Tab was initially suggested, but opened the map; I was then suggested, but did not open inventory. A controls check and direct game test established **Q**. The delivered item was visible as a FUD can in slot three of the first inventory row. This correction was added to `README.md`.
+- **Premature “delivered” interpretation:** the log said `GiveItem`/`delivered`, but that alone did not prove the player could find or consume the food. The user confirmed the actual health increase afterward.
+- **Money failures:** the first two test clicks attempted orders with insufficient cash and were correctly rejected without charge. After test money was added, one order succeeded. This is expected behavior, not an order crash.
+
+## 8. Playtest matrix to continue
+
+| Scenario | Expected observation | Current evidence |
+| --- | --- | --- |
+| No money | No charge, clear notice | Verified twice in live log. |
+| One ordinary quick-test delivery | $10 removed, courier spawns and moves, packet enters inventory, food heals | Verified once; user confirmed healing. |
+| Player hits carrying courier | Native flee, one drop after about five seconds, short order cooldown | Hit/drop verified in live log; player confirmed flee, “not cool” return, and E pickup. A subsequent attempt received the paused notice without a new order. |
+| Player hits courier after handoff | Courier flees and future ordering pauses briefly | Code path present; not live-tested. |
+| Order at native computer | Button appears and initiates same flow | Code path present, not separately live-tested. |
+| Walk away from original order point | Courier drops one package at that point; can pick up | Not verified. |
+| Press force-drop after courier holds packet | One physical recoverable item, no duplication | Not verified. |
+| Attack/kill/knock out courier | Native item spill or a clear recoverable outcome, no duplicate | Not verified. |
+| Block courier / force pathing timeout | One dropped package after 120 seconds, no second courier | Not verified. |
+| Level transition during pending order | Refund exactly $10, no ghost courier | Not verified. |
+| No safe spawn location | Retry then refund once | Not verified. |
+| Full inventory at handoff | Drop item instead of losing it | Not verified. |
+| Several sequential orders | One active at a time, subsequent order works after completion | Not verified. |
+| Normal launcher 45–90-second delay | Same behavior without test panel | Startup may work, full flow not verified. |
+| Character with unusual diet / later levels | Native restrictions and UI remain sensible | Not verified. |
+
+For each run, record seed/level/character, player action, outcome, player-visible result, and matching `BURRITO_*` log lines. Observe *world state and inventory*, not just logs. A useful next test is moving away after ordering, letting the courier drop the can, then recovering it; that is the first evidence for the promised emergent interruption loop. If this is fun, test an NPC intercept or courier combat. If it is merely a slow fetch quest, redesign the consequences before expanding content.
+
+## 9. Next decisions, not yet commitments
+
+1. **Stabilize the current slice:** verify the drop/recovery, death/knockout, full inventory, transition/refund, and normal-delay cases. Add targeted event logging or repair only where evidence reveals a fault. Avoid a broad refactor before these observations.
+2. **Evaluate fun, not just completion:** ask whether waiting, noticing the courier, chasing/recovering the food, and the surrounding NPC chaos produce stories. Track surprises and confusion, especially whether the original order spot and FUD icon need clearer presentation.
+3. **Choose a second systemic probe:** Aquarium/Pet Store would test environmental objects, damage, liquid/electricity, ownership, and NPC reactions; a small Gym/Stairmaster would test one interactive prop. Both are more level/asset-intensive than delivery and need separate engine research. A dating app is promising for delayed actor collisions but should follow proof that this first NPC scheduler can handle overlapping events.
+4. **Revisit shipping only after proof:** local code plugin is currently practical. Steam Workshop coexistence, custom chunk packaging, cross-platform binaries, multiplayer synchronization, asset rights, and a maintainable data-definition layer remain research questions. Do not promise a Workshop package or a new executable based on this slice alone.
+
+The big design preference from the brief remains intact: reuse the game's systems to make small additions collide in funny ways. No local Qwen/thinking model runs as part of this prototype; if one is introduced later, the user requested temperature below 0.25 on a 0–1 scale.
+
+## 10. Answers to the brief's original technical questions (evidence-bounded)
+
+These answers are intentionally uneven. A method name seen in an assembly or used by the slice is not proof that a whole feature category is safe or shippable.
+
+| Brief question | What this work actually established |
+| --- | --- |
+| A. Easiest existing systems to extend? | Native computer interaction buttons, inventory items, timed `Update` work, agent spawning, and native movement were sufficient for one vertical slice. “Easiest” is relative to this installed build, not a general ranking across every system. |
+| B. How are custom items/NPCs/buildings/traits/effects/interactions/quests/shops/dialogue/UI/timed events implemented? | This code demonstrates a namespaced item reusing native Hot Fud setup/use, a native Courier agent spawned dynamically, a Harmony-added Computer button, an IMGUI development panel, and an `Update`-driven timer. It does **not** implement a custom NPC class, chunk/building, trait, status effect, quest, shop, dialogue system, or reusable timed-event framework. Their full APIs are still unmapped. |
+| C. Dynamic spawn after level start? | Yes in the tested single-player Slums run: `spawnerMain.SpawnAgent(..., "Courier")` produced the courier seen in the world. |
+| D. Delayed events? | Yes at prototype scale: one in-memory order with `Time.time` and a tick method. Persistence, overlapping event orchestration, and network synchronization remain open. |
+| E. New phone/menu interactions? | A native **Computer** button and temporary test GUI work. A phone/app surface has not been found or built; do not conflate the current computer button with a phone integration. |
+| F. New environmental objects? | Not established. The food item and courier are not a custom breakable/electrical prop. |
+| G. Hacking/damage/electricity/water/fire/ownership/NPC reactions for new objects? | Not established. Existing game systems are present conceptually in the brief, but their custom-object integration was not exercised. |
+| H. Pets? | No implementation or reliable estimate yet. A native NPC archetype might be a starting point, but follow/curiosity/food and ownership reactions need a separate spike. |
+| I. Aquarium break? | Not implemented; water spread, electricity, loose fish/shrimp, and owner reactions remain a separate, harder integration probe. |
+| J. Dating app? | Not implemented. The single-courier delayed-spawn proof is a useful ingredient, but matches, charisma, behavior profiles, overlapping arrivals, and relationship/faction reactions are untested. |
+| K. Delivery services? | One paid food-delivery path works end to end. General-purpose packages, variable destinations, theft, and outcomes are not yet a data-driven service system. |
+| L. Custom chunks/buildings shipped with mod? | Not established. This slice uses a generated base-game level only. |
+| M. Steam Workshop content alongside code mods? | Not established. This local BepInEx plugin is not a Workshop upload; packaging/coexistence need a separate installation/shipping test. |
+| N. Data-driven definitions? | Feasible in principle as ordinary plugin code/data, but not implemented. Current behavior is deliberately hard-coded to avoid introducing a framework before the first game loop was proven. |
+
+This is the core architectural discovery: the **courier/service path is feasible locally**, while the large environmental-content and distribution questions are still unanswered. A standalone game is not justified by any result so far.
+
+The October 1 follow-on used a small, ignored Mono.Cecil inspection program under `.runtime/inspect/` to list game symbols and relevant IL without modifying the installed assembly. It found `goalType.Flee` and the native `BrainUpdate.GoalArbitrate` branch that gives `Agent.mustFlee` priority, which informed the panic implementation. A case-insensitive scan of type and method names containing “phone” yielded no obvious phone UI seam in this build. That is a **limited symbol search**, not proof that smartphone-style UI is impossible. A proper UI spike should inspect inventory-item use and menu ownership, then prototype one Services entry rather than expanding the current test panel into a permanent interface.
+
+## 11. Reproducible checks and handoff cautions
+
+Run these from this directory. The commands below inspect or build local files; none are a substitute for the live game interaction in §4.
+
+```sh
+bash -n scripts/setup.sh scripts/build.sh scripts/launch.sh quick-test.command play-burrito-run.command
+bash scripts/build.sh
+rg 'BURRITO_|Exception|Error' .tools/loader/BepInEx/LogOutput.log
+cmp .runtime/backups/CloudData-before-prototype/SavedGame.dat \
+  '/Users/davidcrandall/Library/Application Support/com.Streets-of-Rogue.Streets-of-Rogue/CloudData/SavedGame.dat'
+```
+
+At the final documentation check, shell syntax validation succeeded; the `cmp` comparison returned 0 (identical), and the latest active plugin log had the complete successful delivery sequence without a plugin error. Earlier builds were reported as zero-warning/zero-error, but this documentation pass did **not** rebuild or relaunch the game: replacing DLLs while a user is playing would muddle the test and could require a restart. Re-run the build after changing source, with the game closed. Do not use `cmp` as a blanket safety certificate: it compares only the named saved-game file. Log names include timestamps and launcher PIDs, so choose the session matching the actual test rather than assuming the lexically latest filename is always the one you want.
+
+The installer and source contain machine-specific absolute game/profile paths. `SOR_GAME_APP` can override the game bundle for launching; the project references and original-profile initialization path may need editing for another Mac. If a new game build changes method signatures or save access patterns, stop at the preloader/build/boot checks and re-audit before trusting profile isolation. The repository has no known commit history to roll back to; preserve copies of any file before invasive experiments.
