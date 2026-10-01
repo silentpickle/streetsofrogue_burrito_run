@@ -1,4 +1,3 @@
-using System;
 using UnityEngine;
 
 namespace BurritoRun
@@ -18,13 +17,20 @@ namespace BurritoRun
         private int pendingRefund;
         internal string LastOutcome = "none";
         internal Agent Courier => current?.Courier;
+        internal Vector3? Destination => current?.Target;
         internal bool Active => current != null;
+        internal bool ServiceAvailable => Time.time >= serviceSuspendedUntil;
         internal string ServiceStatus => Time.time < serviceSuspendedUntil
             ? $"Courier service paused for {Mathf.CeilToInt(serviceSuspendedUntil - Time.time)}s after an assault."
             : "Courier service is taking orders.";
         internal string Description => current == null ? "No active order." :
-            (current.Courier == null ? "Kitchen accepted your order. Stay near the order spot. ETA: about a minute." :
-             "Courier is on the street. Delivering to your ORIGINAL order spot.") +
+            (current.Panicked ? "Courier is fleeing. Watch for the dropped food." :
+             current.Route?.WaitingForCustomer == true ? $"Meet your driver near ({current.MeetingPoint.x:0}, {current.MeetingPoint.y:0}); food drops after 20 game seconds." :
+             current.Courier == null ? (current.Entrance != null
+                 ? "Kitchen accepted your order. Meet the driver outside the building entrance."
+                 : "Kitchen accepted your order. Stay near the order spot.") :
+             current.Entrance != null ? "Courier is heading to the building entrance. Come outside to meet them." :
+             "Courier is heading to where you placed the order, not following you.") +
             (plugin.TestMode ? "\nQuick test: three-second kitchen delay." : "");
 
         internal DeliveryService(Plugin plugin) { this.plugin = plugin; }
@@ -48,17 +54,32 @@ namespace BurritoRun
             if (money == null || money.invItemCount < 10) { plugin.Notice("You need $10. No money was taken."); return; }
             var gc = player.gc;
             Vector3 target = player.tr.position;
+            Door entrance;
+            Vector3 meetingPoint;
+            bool entranceDelivery = DeliveryDestination.TryFindEntrance(gc, target, out meetingPoint, out entrance);
             // The target is the player's walkable location, never the computer collider.
             int id = ++sequence;
             var random = new System.Random(unchecked(gc.seedNum * 397 ^ id));
             float delay = plugin.TestMode ? 3 : random.Next(45, 91);
-            current = new DeliveryRequest { Id = id, Controller = gc, Player = player, PlayerId = player.UID,
-                Target = target, Due = Time.time + delay, Created = Time.time };
+            current = new DeliveryRequest
+            {
+                Id = id,
+                Controller = gc,
+                Player = player,
+                PlayerId = player.UID,
+                Target = entranceDelivery ? meetingPoint : target,
+                Entrance = entrance,
+                Due = Time.time + delay,
+                Created = Time.time
+            };
             player.inventory.SubtractFromItemCount(money, 10);
             current.Paid = true;
             LastOutcome = "queued";
             plugin.Log($"BURRITO_ORDER id={id} seed={gc.seedNum} target={target} delay={delay}");
+            if (entranceDelivery)
+                plugin.Log($"BURRITO_ENTRANCE id={id} door={entrance.UID} address={target} handoff={meetingPoint}");
             plugin.Notice(plugin.TestMode ? "Order accepted: $10. Courier in 3 seconds." : "Order accepted: $10. Courier in 45-90 seconds. Delivery to THIS spot.");
+            if (entranceDelivery) plugin.Notice("Order accepted: $10. Indoor order: meet your driver OUTSIDE the building entrance.");
         }
 
         internal void Tick()
@@ -113,6 +134,8 @@ namespace BurritoRun
                 if (order.Packet == null) { Cancel("Kitchen lost the package; refunded.", true); return; }
                 if (order.Panicked) return;
                 order.Courier.agentInteractions.GoHere(order.Courier, order.Player, order.Target);
+                order.Route = new DeliveryRoute(Time.time, Vector2.Distance(order.Courier.tr.position, order.Target),
+                    order.Entrance != null ? 0.45f : DeliveryRoute.ArrivalRadius);
                 plugin.Log($"BURRITO_ROUTE id={order.Id} courier={order.CourierId} from={order.Courier.tr.position} to={order.Target}");
                 return;
             }
@@ -125,10 +148,43 @@ namespace BurritoRun
                 Finish("panicked", "Courier fled and dropped your burrito. Chase down the package!");
                 return;
             }
+            order.DoorInteraction.TryKnockAtDestination(order.Courier, order.Target);
             float distance = Vector2.Distance(order.Courier.tr.position, order.Target);
-            if (distance < 0.65f)
+            bool customerHere = Vector2.Distance(order.Player.tr.position, order.Courier.tr.position) < 1.5f;
+            if (order.Entrance != null && !order.Entrance.open && order.Controller.tileInfo.IsIndoors(order.Player.tr.position))
+                customerHere = false; // Do not hand food through a closed entrance door.
+            bool reachedEntrance = order.Entrance != null && distance < 0.45f;
+            bool beginMeeting = reachedEntrance
+                ? order.Route.BeginMeeting(Time.time, "entrance-arrival")
+                : order.Route.NeedsMeeting(Time.time, distance, order.Courier.jobCode == jobType.GoHere);
+            if (beginMeeting)
             {
-                bool customerHere = Vector2.Distance(order.Player.tr.position, order.Courier.tr.position) < 1.5f;
+                // The courier's current occupied tile is our conservative meeting point.
+                // Do not guess an exterior/door tile or teleport through walls.
+                order.MeetingPoint = order.Courier.tr.position;
+                order.Courier.agentInteractions.GoHere(order.Courier, order.Player, order.MeetingPoint);
+                plugin.Log($"BURRITO_ROUTE_FALLBACK id={order.Id} reason={order.Route.FallbackReason} at={order.MeetingPoint} target={order.Target} distance={distance:0.0}");
+                plugin.Notice(reachedEntrance
+                    ? "Driver: I'm at the entrance! Come meet me. I'll wait 20 seconds, then leave the food here."
+                    : "Driver: Can't get there. Come meet me! I'll wait 20 seconds, then leave the food here.");
+            }
+            if (order.Route.WaitingForCustomer)
+            {
+                if (customerHere && order.Player.inventory.hasEmptySlotForItem(order.Packet))
+                {
+                    order.Courier.inventory.GiveItem(order.Packet, order.Player);
+                    Finish("met-driver", "You met the driver and received your burrito.");
+                }
+                else if (order.Route.MeetingExpired(Time.time))
+                {
+                    order.Courier.inventory.DropItem(order.Packet);
+                    plugin.Log($"BURRITO_ROUTE_DROP id={order.Id} at={order.Courier.tr.position}");
+                    Finish("stranded", "Driver left the food at the meeting spot. Recover it with E. You can order again.");
+                }
+                return;
+            }
+            if (order.Entrance == null && distance < DeliveryRoute.ArrivalRadius)
+            {
                 if (customerHere && order.Player.inventory.hasEmptySlotForItem(order.Packet))
                 {
                     order.Courier.inventory.GiveItem(order.Packet, order.Player);
@@ -139,11 +195,6 @@ namespace BurritoRun
                     order.Courier.inventory.DropItem(order.Packet);
                     Finish("dropped", "Burrito left at the original order spot. Pick it up before somebody else does.");
                 }
-            }
-            else if (Time.time - order.Spawned > 120)
-            {
-                order.Courier.inventory.DropItem(order.Packet);
-                Finish("stranded", "Courier gave up and dropped the burrito where they got stuck. Find the package!");
             }
         }
 
@@ -160,6 +211,7 @@ namespace BurritoRun
             order.Courier = gc.spawnerMain.SpawnAgent(candidate, (PlayfieldObject)null, "Courier");
             if (order.Courier == null) { Cancel("Courier could not spawn. Refunded $10.", true); return; }
             order.CourierId = order.Courier.UID;
+            order.DoorInteraction = new CourierDoorInteraction();
             order.SpawnedOnce = true;
             order.Spawned = Time.time;
             order.Courier.SetDefaultGoal("WanderFar");
@@ -172,6 +224,16 @@ namespace BurritoRun
             if (current?.Courier == null || current.Packet == null) { plugin.Notice("Wait until the courier has the package."); return; }
             current.Courier.inventory.DropItem(current.Packet);
             Finish("test-drop", "TEST: Courier dropped the package. Go recover it.");
+        }
+
+        internal void OnCourierKnocked(Door door, Agent courier)
+        {
+            var order = current;
+            if (order == null || courier == null || door == null || courier != order.Courier ||
+                courier.UID != order.CourierId || order.Panicked ||
+                order.DoorInteraction?.ObserveNativeKnock() != true) return;
+            plugin.Log($"BURRITO_DOOR_KNOCK id={order.Id} courier={courier.UID} door={door.UID} at={door.tr.position}");
+            plugin.Notice("Driver: Knock knock. Food delivery! Nearby residents may answer.");
         }
 
         internal void OnCourierHit(Agent victim, Agent attacker)
@@ -214,7 +276,7 @@ namespace BurritoRun
             var order = current;
             current = null;
             LastOutcome = outcome;
-            if (order != null && outcome == "delivered")
+            if (order != null && (outcome == "delivered" || outcome == "met-driver"))
             {
                 recentCourier = order.Courier;
                 recentCustomer = order.Player;
@@ -255,6 +317,10 @@ namespace BurritoRun
             internal Agent Player, Courier;
             internal InvItem Packet;
             internal Vector3 Target;
+            internal Vector3 MeetingPoint;
+            internal DeliveryRoute Route;
+            internal CourierDoorInteraction DoorInteraction;
+            internal Door Entrance;
             internal float Due, Created, Spawned;
             internal float PanicDropDue;
             internal bool Paid, SpawnedOnce, Panicked;

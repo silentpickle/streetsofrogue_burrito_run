@@ -1,0 +1,9 @@
+<Project>
+  <PropertyGroup>
+    <!-- Opt in for net472; these analyzers ship with the installed SDK. -->
+    <EnableNETAnalyzers>true</EnableNETAnalyzers>
+    <AnalysisLevel>7.0</AnalysisLevel>
+    <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+  </PropertyGroup>
+</Project>

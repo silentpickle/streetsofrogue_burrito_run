@@ -21,16 +21,16 @@ namespace BurritoRun.Profile
             int count = 0;
             var getter = assembly.MainModule.ImportReference(typeof(Environment).GetMethod("GetEnvironmentVariable", new[] { typeof(string) }));
             foreach (var type in Types(assembly.MainModule.Types))
-            foreach (var method in type.Methods.Where(m => m.HasBody))
-            foreach (var instruction in method.Body.Instructions.ToArray())
-            {
-                if (!(instruction.Operand is MethodReference call) ||
-                    call.DeclaringType.FullName != "UnityEngine.Application" || call.Name != "get_persistentDataPath") continue;
-                instruction.OpCode = OpCodes.Ldstr;
-                instruction.Operand = "BURRITO_PROFILE_PATH";
-                method.Body.GetILProcessor().InsertAfter(instruction, Instruction.Create(OpCodes.Call, getter));
-                count++;
-            }
+                foreach (var method in type.Methods.Where(m => m.HasBody))
+                    foreach (var instruction in method.Body.Instructions.ToArray())
+                    {
+                        if (!(instruction.Operand is MethodReference call) ||
+                            call.DeclaringType.FullName != "UnityEngine.Application" || call.Name != "get_persistentDataPath") continue;
+                        instruction.OpCode = OpCodes.Ldstr;
+                        instruction.Operand = "BURRITO_PROFILE_PATH";
+                        method.Body.GetILProcessor().InsertAfter(instruction, Instruction.Create(OpCodes.Call, getter));
+                        count++;
+                    }
             Console.WriteLine("BURRITO_PROFILE redirected " + count + " save-path calls to " + profile);
             if (count == 0) throw new InvalidOperationException("No save-path calls found; unsupported game build.");
         }

@@ -7,6 +7,7 @@ namespace BurritoRun
     {
         internal const string Order = "BurritoRun_Order";
         internal const string Food = "BurritoRun_Food";
+        internal const string Phone = "BurritoRun_Phone";
     }
 
     [HarmonyPatch(typeof(NameDB), nameof(NameDB.GetName))]
@@ -15,11 +16,79 @@ namespace BurritoRun
         private static bool Prefix(string myName, string type, ref string __result)
         {
             if (myName == Names.Order && type == "Interface") __result = "Order Burrito here ($10)";
+            else if (myName == Names.Phone && type == "Item") __result = "Services Phone";
+            else if (myName == Names.Phone && type == "Description") __result = "Food delivery and questionable convenience. Use to open Services. F2 also opens it.";
             else if (myName == Names.Food && type == "Item") __result = "Delivery Burrito";
             else if (myName == Names.Food && type == "Description") __result = "Still warm. Probably. Restores 15 health. Delivery fees do not cover gunfire.";
             else return true;
             return false;
         }
+    }
+
+    [HarmonyPatch(typeof(InvItem), nameof(InvItem.SetupDetails))]
+    internal static class PhoneDetails
+    {
+        private static void Prefix(InvItem __instance, out bool __state)
+        {
+            __state = __instance.invItemName == Names.Phone;
+            if (__state) __instance.invItemName = "FriendPhone";
+        }
+        private static void Finalizer(InvItem __instance, bool __state)
+        {
+            if (!__state) return;
+            __instance.invItemName = Names.Phone;
+            __instance.invItemRealName = "Services Phone";
+            __instance.invItemDescription = "Use to open Services. F2 also opens it. Close phone to resume the city.";
+            __instance.itemValue = 0;
+            __instance.cantDrop = true;
+            __instance.cantBeCloned = true;
+            __instance.thiefCantSteal = true;
+            __instance.hasCharges = false;
+            __instance.stackable = false;
+            __instance.noCountText = true;
+        }
+    }
+
+    [HarmonyPatch(typeof(ItemFunctions), nameof(ItemFunctions.UseItem))]
+    internal static class PhoneUse
+    {
+        private static bool Prefix(InvItem item, Agent agent)
+        {
+            if (item.invItemName != Names.Phone) return true;
+            Plugin.Instance.Phone.Open(agent);
+            return false; // Never summon native FriendPhone NPCs or consume the phone.
+        }
+    }
+
+    [HarmonyPatch(typeof(GameController), nameof(GameController.SetTimeScale))]
+    internal static class PhonePause
+    {
+        private static void Postfix()
+        {
+            if (Plugin.Instance?.Phone?.IsOpen == true) UnityEngine.Time.timeScale = 0;
+        }
+    }
+
+    // Suppress gameplay input, not Unity IMGUI input. A short close grace prevents
+    // the mouse click or Escape used to dismiss the phone leaking into gameplay.
+    [HarmonyPatch]
+    internal static class PhoneInput
+    {
+#pragma warning disable IDE0051 // Harmony discovers dynamic patch callbacks by reflection.
+        [HarmonyTargetMethods]
+        private static System.Collections.Generic.IEnumerable<System.Reflection.MethodBase> TargetMethods()
+        {
+            foreach (var name in new[] { "keyCheck", "keyCheckHeld", "pressButtonDown", "mouseButtonDown", "mouseButtonUp", "useItemCheck" })
+                yield return AccessTools.Method(typeof(PlayerControl), name);
+        }
+        [HarmonyPrefix]
+        private static bool Prefix(ref bool __result)
+        {
+            if (Plugin.Instance?.Phone?.BlocksInput != true) return true;
+            __result = false;
+            return false;
+        }
+#pragma warning restore IDE0051
     }
 
     [HarmonyPatch(typeof(Computer), nameof(Computer.DetermineButtons))]
@@ -85,6 +154,16 @@ namespace BurritoRun
         private static void Postfix(Agent __instance, Agent myJustHitByAgent)
         {
             try { Plugin.Instance?.Delivery?.OnCourierHit(__instance, myJustHitByAgent); }
+            catch (Exception error) { Plugin.Instance?.Error(error); }
+        }
+    }
+
+    [HarmonyPatch(typeof(Door), nameof(Door.KnockOnDoor))]
+    internal static class CourierDoorKnock
+    {
+        private static void Postfix(Door __instance, Agent __0)
+        {
+            try { Plugin.Instance?.Delivery?.OnCourierKnocked(__instance, __0); }
             catch (Exception error) { Plugin.Instance?.Error(error); }
         }
     }
