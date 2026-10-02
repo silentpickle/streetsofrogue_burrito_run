@@ -1,8 +1,16 @@
 # Burrito Run: private Streets of Rogue prototype
 
-This is the first playable experiment from `projectbrief.txt`: pay $10 at a working computer, wait for a courier, and deal with whatever happens to the food and courier on the way. It uses the installed Streets of Rogue 1 game and its existing characters, pathing, inventory, and food rules. It is a private BepInEx plugin, not a Workshop upload.
+This is the first playable experiment from `projectbrief.txt`: pay $10 through Services or a working computer, wait for a courier, and deal with whatever happens to the food and courier on the way. It uses the installed Streets of Rogue 1 game and its existing characters, pathing, inventory, and food rules. It is a private BepInEx plugin, not a Workshop upload.
 
-For the complete project history, implementation methodology, evidence, failed experiments, file map, safety boundaries, and remaining test matrix, see [PROJECT_RECORD.md](PROJECT_RECORD.md).
+For the complete project history, implementation methodology, evidence, failed experiments, file map, safety boundaries, and remaining test matrix, see [PROJECT_RECORD.md](PROJECT_RECORD.md). Feature grouping, test gates and possible Workshop waypoints are in [ROADMAP.md](ROADMAP.md).
+
+## Current checkpoint — October 1
+
+Latest installed build: **0.3.1+20261002-004346** (build timestamp is UTC). Its startup smoke and named **safety recovery** scenario passed. The live scenario charged $20 across two real inventory handoffs and cleared one test-seeded safety flag; it did not simulate a courier hit. On the preceding 0.3.0 build, both **delivery handoff** and **drop/recovery** scenarios passed live. F4 previously selected a technical `DoorHelper`; 0.3.1 selected an actual `Door` in a live doorway snapshot. Earlier 0.2.0 tests covered panic/drop/pickup, several indoor entrances, native knocking/NPC response and armed replacement gunfire. Waiting couriers deliberately retain their native wandering behavior.
+
+The Services app shell is functional but still an **IMGUI overlay**, not a finished phone-shaped interface. Actual new-run reset, normal-mode weapon probabilities, death/knockout, full inventory and transition refunds still need focused live tests. A startup smoke does not certify gameplay.
+
+Recommended next milestone: start the aquarium experiment, with actual new-run reset as a separate unfinished check. A recognizable phone presentation can follow separately without moving service/pathfinding/reputation logic into UI.
 
 ## Play it on this Mac
 
@@ -10,7 +18,19 @@ For the complete project history, implementation methodology, evidence, failed e
 2. Double-click `quick-test.command` in this folder. If macOS refuses to open it, right-click the file and choose **Open**. Keep the Terminal window open while playing.
 3. Start a single-player run through the game's normal menu. The top-right **Burrito Run quick test** panel appears once you are on a playable level. Use **Add $30 test money**, then **Order here ($10)**. The courier starts after three seconds. Stay near the spot where you ordered to receive the item; leave it to make the courier drop the item there. **Courier drops package** tests recovery from an interruption.
 
+Opening Streets of Rogue directly through Steam or the app opens an ordinary session without the private loader. Confirm the bottom-left `Burrito Run` build label at the title screen before testing; if it is absent, quit that game and use `quick-test.command`.
+
 You can also interact with any functioning in-game computer and choose **Order Burrito here ($10)**. The normal launcher, `play-burrito-run.command`, removes the test panel and uses a 45–90 second kitchen delay.
+
+### Quick-test scenarios and incident logs (0.3.1)
+
+On an outdoor spot in a playable single-player level, remove any older Delivery Burrito from inventory and use **Add $30 test money** if needed. Choose **Start: delivery handoff**, stay near the order point and watch the panel for PASS, FAIL or INCONCLUSIVE. It pays the ordinary $10 and checks that food really enters inventory. Or choose **Start: drop and recover**: after the courier receives the food, the test forces the normal drop path; press **E** on the FUD can within 45 game seconds to prove pickup. The phone pauses that clock. A failed route is reported as a failure rather than hidden by test-only teleporting.
+
+For recovery, start a **fresh run** with a clear driver record, stand outdoors with no Delivery Burrito in inventory and at least $20, then click **Start: safety recovery ($20)**. The test **seeds one clearly logged safety flag**; it does not hit a courier or impose an assault cooldown. The first $10 order is real and its driver may be armed. Stay near the order spot for a peaceful inventory handoff, then click **Continue safety recovery ($10)** and stay near that second order spot. The panel checks that the first handoff leaves one flag and 1/2 recovery, and that the second clears both; PASS requires two real paid handoffs and inventory gains. This does not test the hit hook or new-run reset. A failed/drop/intercepted handoff reports FAIL; **Clear scenario** leaves the test flag and world state in place.
+
+**F4** (or **Inspect nearest object/NPC**) opens a read-only snapshot of the nearest actor or non-helper object within five world units, including its native state and tile ownership/hazards. Version 0.3.1 ignores the internal `DoorHelper` proxy; a live snapshot near a room selected native `Door` 1118 instead. Selection uses straight-line distance, not walls, visibility or facing, so an NPC behind a wall can still win if closest. The indoor/tile fields describe the **selected target**, not necessarily where the player stands; the observed door tile was indoors while the player stood outside. **F5** (or **Mark incident**) records the current player, courier, health, money, order and positions when something surprising happens. F3 remains the detailed doorway inspector.
+
+Each launch writes an immediately updated `events-*.log` in `.runtime/logs/`, tagged with build, session, scenario run, level, seed and game time. The full BepInEx/Unity logs remain useful for stack traces. **Clear scenario** only clears tracking: it leaves the world, any active order and any seeded safety flag unchanged. For a clean retry, return to the normal menu and start a new single-player run; fixed test rooms and automatic world reset are future work. The named scenarios standardize the test action and result, but a randomly generated level can still change NPC behavior.
 
 ### Services phone prototype
 
@@ -18,21 +38,23 @@ Builds from version 0.1.1 show a compiled UTC timestamp alongside the version (f
 
 Press **F2** on a playable single-player level to open **Services** (on some Mac keyboards, **Fn-F2**). Alternatively, open inventory with **Q** and use **Services Phone**, which is supplied automatically when there is a free inventory slot. Quick-test mode also has a **Services phone** button.
 
-The phone shows your wallet, current order, last outcome, and courier-service cooldown. Choose **Order burrito here ($10)**, then close the phone with its button, F2, or Escape. **The city and delivery timers pause while the phone is open.** The order button is disabled while another order is active, during suspension, or with less than $10. Computers still work. This first phone uses the native Friend Phone icon but does not summon its NPCs or consume charges. New phone UI behavior requires live playtesting; startup checks alone do not prove it works.
+Version 0.2.0 starts the phone's app shell: **Home → Food Delivery** for orders and **My Account** for your driver safety record. It deliberately uses the existing Unity IMGUI overlay: this milestone adds structure, not a finished visual skin or native Canvas implementation. Service rules live outside the screen, so the presentation can change without rewriting delivery. The quick-test panel and doorway inspector remain developer tools, not extra phone apps. The user saw the additions and accepted this distinction.
+
+The phone shows your wallet, current order, last outcome, and courier-service cooldown. Choose **Order burrito here ($10)**, then close the phone with its button, F2, or Escape. **The city and delivery timers pause while the phone is open.** The order button is disabled while another order is active, during suspension, or with less than $10. Computers still work. This first phone uses the native Friend Phone icon but does not summon its NPCs or consume charges. UI additions have been seen live; every opener, close path and inventory-full case has not been separately rechecked on 0.2.0.
 
 ### Indoor and stalled deliveries
 
-Indoor orders now try to select a safe outdoor handoff tile beside an exterior door belonging to the addressed building. This applies to open doors too: the driver targets the entrance, not your room, and waits 20 game seconds for pickup before dropping the food. Come outside to meet them; food is not handed through a closed entrance door. Entrance selection is conservative and still needs live testing. If no suitable entrance within 12 units is found, the original-address routing and bounded fallback remain in use.
+Indoor orders try to select a safe outdoor handoff tile beside an exterior door belonging to the addressed building. This applies to open doors too: the driver targets the entrance, not your room, and waits 20 game seconds for pickup before dropping the food. Come outside to meet them; food is not handed through a closed entrance door. Several E/W/N doorway cases and a building whose nearest door was internal worked in live tests; this is not universal pathfinding coverage, and south-facing doors remain untested. If no suitable entrance within 12 units is found, the original-address routing and bounded fallback remain in use.
 
-After failed live entrance selection, the selector now probes several tiles beyond the threshold rather than one adjacent tile, and checks a clear approach. Logs named `BURRITO_ADDRESS`, `BURRITO_ENTRANCE_SCAN`, and `BURRITO_ADDRESS_RESULT` explain classification and candidate rejection; `BURRITO_ENTRANCE` confirms successful selection. The current candidate fix still needs a live indoor order. If selected, the phone explicitly tells you to meet the driver outside.
+After failed live entrance selection, the selector was changed to probe several tiles beyond the threshold rather than one adjacent tile, and check a clear approach. Logs named `BURRITO_ADDRESS`, `BURRITO_ENTRANCE_SCAN`, and `BURRITO_ADDRESS_RESULT` explain classification and candidate rejection; `BURRITO_ENTRANCE` confirms successful selection. That revision received successful live indoor tests. If selected, the phone explicitly tells you to meet the driver outside.
 
 Native AI still does the walking. If its delivery job ends early, it makes no meaningful progress toward the destination for 12 game seconds, or the route lasts 45 seconds, the driver switches to **come meet me** at their current location. Approach to receive the food if you have inventory room. After 20 game seconds they drop it, end the order, and allow another order. Use **E** to recover the FUD. Opening the phone pauses these clocks too. This is a conservative fallback, not a guarantee of reaching every indoor room; it does not unlock doors, teleport, or guarantee an outdoor meeting point.
 
 Couriers may wander or step aside while waiting and drop food away from the initial meeting coordinate. This is intentionally preserved for natural, emergent behavior; the phone's coordinate is where the wait began, not live tracking.
 
-Routing policy is isolated in `src/BurritoRun/DeliveryRoute.cs`. Run `bash scripts/test-routing.sh` for deterministic policy checks. Indoor native movement and fallback handoff still need live testing on the new build.
+Routing policy is isolated in `src/BurritoRun/DeliveryRoute.cs`, address selection in `DeliveryDestination.cs`, and optional knocking in `CourierDoorInteraction.cs`. Run `bash scripts/test-routing.sh` for the 30 route/reputation policy checks. Native movement, meet-driver handoff and fallback drops have been exercised; new layouts can still fail and should be diagnosed from snapshots/logs.
 
-The next build adds **native door knocking**: a courier arriving near a closed door at the addressed spot knocks once unless the game's own blocked-door behavior already made them knock. This uses the game's door noise and normal NPC reactions; it doesn't force residents to answer, unlock doors, or guarantee entry. Open doors don't trigger an added knock. The helper is `CourierDoorInteraction.cs`; native AI may still make its own further knocks. Close the game and run `bash scripts/build.sh` to install a newly compiled update before testing.
+**Native door knocking** is installed and observed, including NPC response and the courier stepping aside. A courier near a closed addressed entrance adds one knock unless native blocked-door behavior already made them knock. This uses the game's door noise and normal NPC reactions; it doesn't force residents to answer, unlock doors, or guarantee entry. Open doors don't trigger an added knock. The helper is `CourierDoorInteraction.cs`; native AI may still make its own further knocks.
 
 ### Inspect a doorway without ordering
 
@@ -42,20 +64,26 @@ Detailed `BURRITO_DOOR_GRID_*`, `BURRITO_DOOR_TILE`, `BURRITO_DOOR_GEOMETRY`, an
 
 The first test is whether a courier appears, walks toward the original order spot, and either hands over or drops one burrito. Press **Q** to open inventory: the delivered burrito currently uses the game's blue-and-red **FUD** can icon. Click it to eat when below full health. Try intercepting or attacking the courier after that. The burrito uses the game's Hot Fud art and food behavior, including dietary restrictions; the name and description are customized. **Tab opens the map, not inventory.**
 
-The next experimental behavior reacts when *you* hit the courier: native flee AI takes over, a courier still carrying food drops it after about five seconds, and new orders are refused for 20 seconds in quick-test mode (45 seconds in normal mode). The panel shows service status. In live October 1 tests, the courier fled, dropped the FUD can, returned to say “not cool,” and the player recovered the can with **E**. A subsequent order attempt during cooldown produced a service-paused notice and no new order log; the player's cash display still needs a direct check.
+When *you* hit the courier, native flee AI is requested, a courier still carrying food drops it after about five seconds, and new orders are refused for 20 seconds in quick-test mode (45 seconds in normal mode). The panel shows service status. In live October 1 tests, the courier fled, dropped the FUD can, returned to say “not cool,” and the player recovered the can with **E**. A subsequent order attempt during cooldown produced a service-paused notice and no new order log; the player's cash display still needs a direct check. An armed courier can still shoot during native combat despite the flee flags.
+
+Assaults add run-scoped **driver safety flags**. In normal mode, 1/2/3 flags give a 50%/75%/100% chance of an added pistol on the next driver. In quick-test mode, any flag guarantees an armed replacement for predictable testing. The phone warns about protection; native AI still controls reactions, with no forced hostility. Two peaceful inventory handoffs clear one flag; abandoned/drop/intercepted orders do not. No extra delivery charge is taken: hazard-pay dialogue is flavor only. Reputation is coded to reset at death/ghost, title return or hub/tutorial/attract, not ordinary playable-level changes, and is not saved. Native equip was logged and the player confirmed the second driver shot them after another assault. The 0.3.1 test-seeded flag cleared after two real paid handoffs; actual new-run reset and normal-mode probabilities remain unverified live.
+
+Next focused reputation check: start a **new run** and check that flags/cooldown are clear. The seeded recovery scenario has already passed; it does not prove the native run boundary. Do not count a doorway drop as a peaceful handoff. Avoid waiting with the phone open because timers pause. The prior assault/reorder test produced `BURRITO_REPUTATION`, `BURRITO_DRIVER_RISK armed=True`, `BURRITO_ARMED ... equipped=True`, and user-observed gunfire; that separately verifies the hit/escalation path, not new-run reset.
 
 ## Safety and troubleshooting
 
 - The launcher keeps prototype saves under `.runtime/profile`. It does not write the game's managed assemblies or use your normal save directory. A copy of the original CloudData from before the first prototype launch is in `.runtime/backups/CloudData-before-prototype`.
 - Launch the unmodified game through Steam for ordinary play. Close either copy before launching the other.
-- Logs are in `.runtime/logs`. If the game crashes or an order misbehaves, send the newest `game-*.log` and `plugin-*.log`, plus what happened just before it. These logs can include paths and Steam diagnostic lines; inspect before sharing publicly.
-- The plugin and save isolation passed a live launch and a 25-second startup smoke test. On October 1, a live quick-test order charged $10, spawned a courier, routed to the order spot, and delivered the burrito to inventory. The player then ate it and confirmed it restored health. Courier interruption and later levels still need playtesting.
+- Logs are in `.runtime/logs`. The new `events-*.log` is written as events happen, so it can preserve the last scenario event after an abrupt exit. If the game crashes or an order misbehaves, keep the matching `events-*`, `game-*` and `plugin-*` files plus what happened just before it. Logs can include paths and Steam diagnostic lines; inspect before sharing publicly.
+- Earlier builds passed a 25-second startup smoke; the current build booted and received live delivery/combat testing. Delivery/healing, player-assault panic/drop/recovery, doorway cases and armed escalation have evidence. Courier death/knockout, transition refunds and later-level coverage remain gaps. A later early exit without `BURRITO_SMOKE_PASS` is not a passed smoke test.
 
 ## Build or restore the local tooling
 
 The source is in `src/`. On this Mac, `bash scripts/build.sh` rebuilds both DLLs and places them in `.tools/loader/BepInEx`. The `.tools` and `.runtime` directories are local and ignored by Git. To provision a fresh checkout, run `bash scripts/setup.sh` with .NET SDK 7 installed and the game installed at the path in `src/BurritoRun/BurritoRun.csproj`.
 
 The Mac game uses Mirror networking. RogueLibs 4 release candidate targets an older Unity networking assembly and failed to load cleanly here, so this prototype uses BepInEx/Harmony directly. The original game install remains intact.
+
+A pre-reputation recovery checkpoint is preserved at `.runtime/checkpoints/0.1.1-20261001-204736/`, containing both DLLs and `source-before-reputation.tar.gz`. See the project record for restoration boundaries; it is not a backup of game saves.
 
 ## Build and code hygiene commands
 

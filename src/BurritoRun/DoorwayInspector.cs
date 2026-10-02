@@ -76,6 +76,7 @@ namespace BurritoRun
                 "\ni=indoor  o=outdoor  #=wall  X=native blocked\n!=possible but unsafe  D=door  P=player  T=target\nMarkers override cell symbols; full data is in the log.\nLocal walkability does NOT prove a complete path.\nSnapshot only: opening a door afterward doesn't refresh it.";
             plugin.Log("BURRITO_DOOR_GRID_END door=" + door.UID);
             plugin.Phone.Open(player);
+            plugin.World.Hide();
             Visible = true;
         }
 

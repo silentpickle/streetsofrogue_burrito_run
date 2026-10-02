@@ -15,11 +15,20 @@ namespace BurritoRun
         private float recentCourierUntil;
         private bool recentCourierHit;
         private int pendingRefund;
+        private readonly CustomerReputation reputation = new CustomerReputation();
+        internal string AccountStatus => reputation.Reports == 0
+            ? "Driver safety record: clear."
+            : $"Driver safety flags: {reputation.Reports}. Drivers may carry protection.\nTwo peaceful handoffs clear one flag ({reputation.PeacefulHandoffs}/2).";
         internal string LastOutcome = "none";
         internal Agent Courier => current?.Courier;
         internal Vector3? Destination => current?.Target;
         internal bool Active => current != null;
+        internal int ActiveOrderId => current?.Id ?? 0;
+        internal bool CourierHasPacket => current?.Courier != null && current.Packet != null &&
+            current.Courier.inventory.InvItemList.Contains(current.Packet) && current.Packet.invItemCount > 0;
         internal bool ServiceAvailable => Time.time >= serviceSuspendedUntil;
+        internal int SafetyReports => reputation.Reports;
+        internal int PeacefulHandoffs => reputation.PeacefulHandoffs;
         internal string ServiceStatus => Time.time < serviceSuspendedUntil
             ? $"Courier service paused for {Mathf.CeilToInt(serviceSuspendedUntil - Time.time)}s after an assault."
             : "Courier service is taking orders.";
@@ -69,6 +78,7 @@ namespace BurritoRun
                 PlayerId = player.UID,
                 Target = entranceDelivery ? meetingPoint : target,
                 Entrance = entrance,
+                Armed = reputation.ShouldArm(plugin.TestMode, random.NextDouble()),
                 Due = Time.time + delay,
                 Created = Time.time
             };
@@ -76,6 +86,7 @@ namespace BurritoRun
             current.Paid = true;
             LastOutcome = "queued";
             plugin.Log($"BURRITO_ORDER id={id} seed={gc.seedNum} target={target} delay={delay}");
+            plugin.Log($"BURRITO_DRIVER_RISK id={id} reports={reputation.Reports} armed={current.Armed} chance={(plugin.TestMode && reputation.Reports > 0 ? 1 : reputation.ArmedChance)}");
             if (entranceDelivery)
                 plugin.Log($"BURRITO_ENTRANCE id={id} door={entrance.UID} address={target} handoff={meetingPoint}");
             plugin.Notice(plugin.TestMode ? "Order accepted: $10. Courier in 3 seconds." : "Order accepted: $10. Courier in 45-90 seconds. Delivery to THIS spot.");
@@ -87,6 +98,17 @@ namespace BurritoRun
             if (Time.unscaledTime < nextTick) return;
             nextTick = Time.unscaledTime + 0.2f;
             var gc = GameController.gameController;
+            if (gc != null && (gc.returningToMainMenu || gc.levelType == "HomeBase" || gc.levelType == "Attract" ||
+                gc.levelType == "Tutorial" || gc.playerAgent != null && (gc.playerAgent.dead || gc.playerAgent.ghost)))
+            {
+                if (reputation.Reports > 0)
+                {
+                    reputation.Reset();
+                    serviceSuspendedUntil = 0;
+                    recentCourier = null;
+                    plugin.Log("BURRITO_REPUTATION reset=run-ended");
+                }
+            }
             if (recentCourier != null && (Time.time > recentCourierUntil || recentCourier.dead ||
                 recentCourier.UID != recentCourierId || recentCourier.gc != gc))
                 recentCourier = null;
@@ -133,6 +155,7 @@ namespace BurritoRun
                 order.Packet = order.Courier.inventory.AddItem(Names.Food, 1);
                 if (order.Packet == null) { Cancel("Kitchen lost the package; refunded.", true); return; }
                 if (order.Panicked) return;
+                if (order.Armed) CourierLoadout.TryEquipSidearm(plugin, order.Courier, order.Id);
                 order.Courier.agentInteractions.GoHere(order.Courier, order.Player, order.Target);
                 order.Route = new DeliveryRoute(Time.time, Vector2.Distance(order.Courier.tr.position, order.Target),
                     order.Entrance != null ? 0.45f : DeliveryRoute.ArrivalRadius);
@@ -226,6 +249,14 @@ namespace BurritoRun
             Finish("test-drop", "TEST: Courier dropped the package. Go recover it.");
         }
 
+        internal bool SeedSafetyFlagForTest()
+        {
+            if (!plugin.TestMode || reputation.Reports != 0) return false;
+            reputation.RecordAssault();
+            plugin.Log("BURRITO_REPUTATION action=test-seed reports=" + reputation.Reports);
+            return true;
+        }
+
         internal void OnCourierKnocked(Door door, Agent courier)
         {
             var order = current;
@@ -246,6 +277,8 @@ namespace BurritoRun
             if (!activeHit && !recentHit) return;
             if (activeHit && order.Panicked) return;
             if (recentHit) recentCourierHit = true;
+            reputation.RecordAssault();
+            plugin.Log($"BURRITO_REPUTATION action=assault reports={reputation.Reports}");
             if (activeHit)
             {
                 order.Panicked = true;
@@ -278,6 +311,8 @@ namespace BurritoRun
             LastOutcome = outcome;
             if (order != null && (outcome == "delivered" || outcome == "met-driver"))
             {
+                reputation.RecordPeacefulHandoff();
+                plugin.Log($"BURRITO_REPUTATION action=peaceful-handoff reports={reputation.Reports} recovery={reputation.PeacefulHandoffs}");
                 recentCourier = order.Courier;
                 recentCustomer = order.Player;
                 recentCourierId = order.CourierId;
@@ -286,6 +321,7 @@ namespace BurritoRun
             }
             if (order != null) ReleaseCourier(order);
             plugin.Log($"BURRITO_RESULT id={order?.Id} outcome={outcome}");
+            if (plugin.TestMode && order != null) plugin.Scenarios.ObserveResult(order.Id, outcome);
             plugin.Notice(message);
         }
 
@@ -323,7 +359,7 @@ namespace BurritoRun
             internal Door Entrance;
             internal float Due, Created, Spawned;
             internal float PanicDropDue;
-            internal bool Paid, SpawnedOnce, Panicked;
+            internal bool Paid, SpawnedOnce, Panicked, Armed;
         }
     }
 }
