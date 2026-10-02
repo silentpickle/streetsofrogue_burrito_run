@@ -14,6 +14,8 @@ namespace BurritoRun
         private GameController controller;
         private ObjectReal testTank;
         private int testTankId;
+        private GameObject tankVisual;
+        private Sprite tankSprite;
         private Sprite fishSprite;
         private Sprite shrimpSprite;
         private string status = "No test tank. Spawn one in an open area.";
@@ -31,24 +33,23 @@ namespace BurritoRun
             if (looseFish.Count > 6)
             { plugin.Notice("Wait for the loose fish to clear before testing another tank."); return; }
 
-            var origin = player.tr.position;
-            var spot = player.gc.tileInfo.FindLocationNearLocation(origin, null, 1.2f, 2.5f, true, true);
-            float distance = Vector2.Distance(origin, spot);
-            if (spot == Vector2.zero || distance < 0.8f || distance > 2.6f ||
-                !player.gc.tileInfo.PossibleToWalk(player, spot))
-            { plugin.Notice("No clear nearby tank spot. Move to a more open area."); return; }
-
             try
             {
-                var tank = player.gc.spawnerMain.spawnObjectReal(new Vector3(spot.x, spot.y, 0), player, "FishTank");
-                if (tank == null) { plugin.Notice("Native FishTank prefab was unavailable; no tank spawned."); return; }
+                if (!TryFindSpot(player, out var spot))
+                { plugin.Notice("No clear tank square within 3.6 units; see placement numbers in log."); return; }
+                // FishTank exists only in the game's name database, not its prefab
+                // dictionary. Table is registered in both prefab and object-var data.
+                var tank = player.gc.spawnerMain.spawnObjectReal(new Vector3(spot.x, spot.y, 0), player, "Table");
+                if (tank == null) { plugin.Notice("Native Table base could not spawn; see log."); return; }
                 controller = player.gc;
                 testTank = tank;
                 testTankId = tank.UID;
-                status = "Tank " + testTankId + " placed. Hit it to test the spill.";
+                try { tankVisual = CreateTankVisual(tank); }
+                catch (Exception visualError) { plugin.Error(visualError); }
+                status = "Aquarium " + testTankId + " on a Table base. Hit it to test.";
                 plugin.Log("BURRITO_AQUARIUM_SPAWN tank=" + testTankId + " prefab=" + tank.prefabName +
                     " type=" + tank.GetType().Name + " at=" + tank.tr.position +
-                    " owner=" + tank.owner);
+                    " requested=" + spot + " visual=" + (tankVisual != null) + " owner=" + tank.owner);
                 plugin.Notice(status);
             }
             catch (Exception error)
@@ -77,6 +78,8 @@ namespace BurritoRun
             if (tank == null || tank != testTank || tank.UID != testTankId ||
                 tank.gc != controller || controller != GameController.gameController) return;
             testTank = null; // Consume the event before any native callback can re-enter.
+            if (tankVisual != null) UnityEngine.Object.Destroy(tankVisual);
+            tankVisual = null;
             var center = tank.tr.position;
             int waterTiles = 0;
             var offsets = new[]
@@ -108,10 +111,21 @@ namespace BurritoRun
             {
                 foreach (var fish in looseFish) if (fish.Object != null) UnityEngine.Object.Destroy(fish.Object);
                 looseFish.Clear();
+                if (tankVisual != null) UnityEngine.Object.Destroy(tankVisual);
+                tankVisual = null;
                 testTank = null;
                 controller = null;
                 status = "No test tank. Spawn one in an open area.";
                 return;
+            }
+            if (testTank != null && (testTank.destroying || testTank.destroyed))
+            {
+                plugin.Log("BURRITO_AQUARIUM_MISSED_HOOK tank=" + testTankId +
+                    " destroying=" + testTank.destroying + " destroyed=" + testTank.destroyed);
+                if (tankVisual != null) UnityEngine.Object.Destroy(tankVisual);
+                tankVisual = null;
+                testTank = null;
+                status = "Tank destroyed without spill hook; see log.";
             }
             for (int index = looseFish.Count - 1; index >= 0; index--)
             {
@@ -128,6 +142,104 @@ namespace BurritoRun
                     Mathf.Abs(Mathf.Sin(age * 7f + fish.Index)) * 0.10f, 0);
                 fish.Object.transform.rotation = Quaternion.Euler(0, 0, Mathf.Sin(age * 9f + fish.Index) * 28f);
             }
+        }
+
+        private bool TryFindSpot(Agent player, out Vector2 spot)
+        {
+            var origin = (Vector2)player.tr.position;
+            var tiles = player.gc.tileInfo;
+            var native = tiles.FindLocationNearLocation(origin, null, 1.2f, 2.5f, true, true);
+            float nativeDistance = Vector2.Distance(origin, native);
+            bool nativeWalkable = native != Vector2.zero && tiles.PossibleToWalk(player, native);
+            if (nativeWalkable && nativeDistance >= 1.0f && nativeDistance <= 3.2f)
+            {
+                spot = native;
+                plugin.Log("BURRITO_AQUARIUM_PLACE origin=" + origin + " native=" + native +
+                    " distance=" + nativeDistance.ToString("F2") + " walkable=True source=native");
+                return true;
+            }
+
+            var center = new Vector2(
+                Mathf.Floor((origin.x + 0.32f) / 0.64f) * 0.64f,
+                Mathf.Floor((origin.y + 0.32f) / 0.64f) * 0.64f);
+            var directions = new[]
+            {
+                Vector2.right, Vector2.left, Vector2.up, Vector2.down,
+                new Vector2(1, 1), new Vector2(-1, 1), new Vector2(1, -1), new Vector2(-1, -1)
+            };
+            int tested = 0;
+            int walkable = 0;
+            foreach (int radius in new[] { 3, 4, 2, 5 })
+                foreach (var direction in directions)
+                {
+                    var candidate = center + direction * (radius * 0.64f);
+                    float distance = Vector2.Distance(origin, candidate);
+                    if (distance < 1.0f || distance > 3.6f) continue;
+                    tested++;
+                    if (!tiles.PossibleToWalk(player, candidate)) continue;
+                    walkable++;
+                    spot = candidate;
+                    plugin.Log("BURRITO_AQUARIUM_PLACE origin=" + origin + " native=" + native +
+                        " nativeDistance=" + nativeDistance.ToString("F2") +
+                        " nativeWalkable=" + nativeWalkable + " fallbackTested=" + tested +
+                        " fallbackWalkable=" + walkable + " chosen=" + spot +
+                        " chosenDistance=" + distance.ToString("F2") + " source=grid");
+                    return true;
+                }
+            spot = Vector2.zero;
+            plugin.Log("BURRITO_AQUARIUM_PLACE origin=" + origin + " native=" + native +
+                " nativeDistance=" + nativeDistance.ToString("F2") +
+                " nativeWalkable=" + nativeWalkable + " fallbackTested=" + tested +
+                " fallbackWalkable=" + walkable + " chosen=none");
+            return false;
+        }
+
+        private GameObject CreateTankVisual(ObjectReal tank)
+        {
+            tankSprite ??= MakeTankSprite();
+            var visual = new GameObject("BurritoRun Aquarium Glass");
+            visual.transform.SetParent(tank.tr, false);
+            visual.transform.localPosition = new Vector3(0, 0.55f, -0.001f);
+            var renderer = visual.AddComponent<SpriteRenderer>();
+            renderer.sprite = tankSprite;
+            if (tank.spr != null)
+            {
+                var nativeRenderer = tank.spr.GetComponent<Renderer>();
+                if (nativeRenderer != null)
+                {
+                    renderer.sortingLayerID = nativeRenderer.sortingLayerID;
+                    renderer.sortingOrder = nativeRenderer.sortingOrder + 1;
+                }
+            }
+            return visual;
+        }
+
+        private static Sprite MakeTankSprite()
+        {
+            const int width = 24, height = 18;
+            var pixels = new Color32[width * height];
+            var frame = new Color32(30, 43, 62, 255);
+            var water = new Color32(53, 150, 192, 220);
+            var glass = new Color32(157, 226, 244, 115);
+            var fish = new Color32(255, 191, 69, 255);
+            for (int y = 0; y < height; y++)
+                for (int x = 0; x < width; x++)
+                {
+                    if (x == 0 || x == width - 1 || y == 0 || y == height - 1)
+                        pixels[y * width + x] = frame;
+                    else if (y <= 10) pixels[y * width + x] = water;
+                    else pixels[y * width + x] = glass;
+                }
+            for (int x = 2; x < width - 2; x++) pixels[11 * width + x] = new Color32(177, 233, 247, 255);
+            for (int x = 7; x <= 11; x++) pixels[6 * width + x] = fish;
+            pixels[5 * width + 7] = fish;
+            pixels[7 * width + 7] = fish;
+            pixels[6 * width + 10] = new Color32(25, 46, 65, 255);
+            var texture = new Texture2D(width, height, TextureFormat.RGBA32, false)
+            { filterMode = FilterMode.Point, wrapMode = TextureWrapMode.Clamp };
+            texture.SetPixels32(pixels);
+            texture.Apply();
+            return Sprite.Create(texture, new Rect(0, 0, width, height), new Vector2(0.5f, 0), 24f);
         }
 
         private bool SpawnLooseFish(Vector3 position, bool shrimp, int index)

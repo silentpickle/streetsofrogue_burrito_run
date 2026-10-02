@@ -3,6 +3,16 @@ set -euo pipefail
 project_dir="$(cd "$(dirname "$0")/.." && pwd)"
 game_app="${SOR_GAME_APP:-/Users/davidcrandall/Library/Application Support/Steam/steamapps/common/Streets of Rogue/StreetsOfRogueMac.app}"
 loader_dir="$project_dir/.tools/loader"
+if [[ "$game_app" == *.app ]]; then
+    executable_name="$(plutil -extract CFBundleExecutable raw -o - "$game_app/Contents/Info.plist")"
+    game_executable="$game_app/Contents/MacOS/$executable_name"
+else
+    game_executable="$game_app"
+fi
+if [ ! -x "$game_executable" ]; then
+    echo "Game executable not found: $game_executable"
+    exit 1
+fi
 if pgrep -f '/StreetsOfRogueMac.app/Contents/MacOS/Streets of Rogue' >/dev/null; then
     echo 'Close the running Streets of Rogue first, then launch this again.'
     exit 1
@@ -32,7 +42,7 @@ echo 'Quick Start a single-player run. Order at any computer.'
 cd "$loader_dir"
 # Doorstop's relative dylib resolution requires this working directory on macOS.
 set +e
-bash run_bepinex.sh "$game_app" -screen-fullscreen 0 -screen-width 1280 -screen-height 720 -logFile "$log" "$@" >"$project_dir/.runtime/logs/console-$stamp.log" 2>&1
+bash run_bepinex.sh "$game_executable" -screen-fullscreen 0 -screen-width 1280 -screen-height 720 -logFile "$log" "$@" >"$project_dir/.runtime/logs/console-$stamp.log" 2>&1
 result=$?
 set -e
 cp "$loader_dir/BepInEx/LogOutput.log" "$project_dir/.runtime/logs/plugin-$stamp.log" 2>/dev/null || true
