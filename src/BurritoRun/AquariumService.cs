@@ -4,8 +4,8 @@ using UnityEngine;
 
 namespace BurritoRun
 {
-    // First aquarium probe: one native tank at a time, a five-tile native water
-    // spill, and at most nine short-lived code-drawn fish visuals per level.
+    // Aquarium probe: one native stand at a time, a five-tile native water spill,
+    // and at most nine short-lived code-drawn critter visuals per level.
     // No ownership, electrical, AI or pickup rules are invented here.
     internal sealed class AquariumService
     {
@@ -92,15 +92,22 @@ namespace BurritoRun
                     waterTiles++;
 
             int fishCount = 0;
+            int scatterCount = 0;
             for (int index = 0; index < 3 && looseFish.Count < 9; index++)
             {
                 if (SpawnLooseFish(new Vector3(center.x + (index - 1) * 0.28f,
-                    center.y - 0.35f, -1.5f), index == 1, index)) fishCount++;
+                    center.y - 0.35f, -1.5f), index > 0, index, center, out bool scattered))
+                {
+                    fishCount++;
+                    if (scattered) scatterCount++;
+                }
             }
-            status = "Tank broke: " + waterTiles + " wet tiles, " + fishCount + " loose critters.";
+            status = "Tank broke: " + waterTiles + " wet tiles, " + fishCount +
+                " critters, " + scatterCount + " shrimp scuttling.";
             plugin.Log("BURRITO_AQUARIUM_BREAK tank=" + testTankId + " damager=" +
                 (damager != null ? damager.UID.ToString() : "none") + " at=" + center +
-                " wetTiles=" + waterTiles + " looseCritters=" + fishCount);
+                " wetTiles=" + waterTiles + " looseCritters=" + fishCount +
+                " scatteringShrimp=" + scatterCount);
             plugin.Notice(status);
         }
 
@@ -137,10 +144,28 @@ namespace BurritoRun
                     continue;
                 }
                 float age = Time.time - fish.Born;
-                fish.Object.transform.position = fish.Origin + new Vector3(
-                    Mathf.Sin(age * (4.7f + fish.Index)) * 0.18f,
-                    Mathf.Abs(Mathf.Sin(age * 7f + fish.Index)) * 0.10f, 0);
-                fish.Object.transform.rotation = Quaternion.Euler(0, 0, Mathf.Sin(age * 9f + fish.Index) * 28f);
+                if (fish.Scatter)
+                {
+                    const float delay = 0.35f, duration = 2.4f;
+                    float progress = Mathf.Clamp01((age - delay) / duration);
+                    float eased = Mathf.SmoothStep(0, 1, progress);
+                    var position = Vector3.Lerp(fish.Origin, fish.Destination, eased);
+                    float twitch = progress > 0 && progress < 1 ?
+                        Mathf.Sin(age * 24f + fish.Index) * 0.045f : 0;
+                    position += new Vector3(-fish.DirectionY * twitch,
+                        fish.DirectionX * twitch + Mathf.Abs(Mathf.Sin(age * 11f)) * 0.025f, 0);
+                    fish.Object.transform.position = position;
+                    fish.Object.transform.rotation = Quaternion.Euler(0, 0,
+                        Mathf.Sin(age * 14f + fish.Index) * 12f);
+                }
+                else
+                {
+                    fish.Object.transform.position = fish.Origin + new Vector3(
+                        Mathf.Sin(age * (4.7f + fish.Index)) * 0.18f,
+                        Mathf.Abs(Mathf.Sin(age * 7f + fish.Index)) * 0.10f, 0);
+                    fish.Object.transform.rotation = Quaternion.Euler(0, 0,
+                        Mathf.Sin(age * 9f + fish.Index) * 28f);
+                }
             }
         }
 
@@ -242,18 +267,42 @@ namespace BurritoRun
             return Sprite.Create(texture, new Rect(0, 0, width, height), new Vector2(0.5f, 0), 24f);
         }
 
-        private bool SpawnLooseFish(Vector3 position, bool shrimp, int index)
+        private bool SpawnLooseFish(Vector3 position, bool shrimp, int index, Vector3 center,
+            out bool scattered)
         {
+            scattered = false;
             try
             {
+                ScatterRoute route = default;
+                var player = controller.playerAgent;
+                if (shrimp && player != null)
+                {
+                    try
+                    {
+                        route = AquariumScatter.Choose(center.x, center.y,
+                            testTankId + (index - 1) * 2, (x, y) =>
+                                controller.tileInfo.PossibleToWalk(player, new Vector2(x, y)));
+                    }
+                    catch (Exception routeError) { plugin.Error(routeError); }
+                }
+                var destination = route.Found ? new Vector3(route.X, route.Y, position.z) : position;
                 var sprite = shrimp ? shrimpSprite ??= MakeSprite(new Color32(255, 112, 108, 255)) :
                     fishSprite ??= MakeSprite(new Color32(77, 219, 211, 255));
-                var fish = new GameObject(shrimp ? "BurritoRun Loose Shrimp" : "BurritoRun Loose Fish");
-                fish.transform.position = position;
-                var renderer = fish.AddComponent<SpriteRenderer>();
+                var critter = new GameObject(shrimp ? "BurritoRun Loose Shrimp" : "BurritoRun Loose Fish");
+                critter.transform.position = position;
+                var renderer = critter.AddComponent<SpriteRenderer>();
                 renderer.sprite = sprite;
                 renderer.sortingOrder = 1000;
-                looseFish.Add(new LooseFish(fish, position, Time.time, Time.time + 25f, index));
+                renderer.flipX = route.Found && destination.x < position.x;
+                looseFish.Add(new LooseFish(critter, position, destination, Time.time,
+                    Time.time + 25f, index, route.Found));
+                scattered = route.Found;
+                plugin.Log("BURRITO_AQUARIUM_CRITTER tank=" + testTankId + " kind=" +
+                    (shrimp ? "shrimp" : "fish") + " index=" + index +
+                    " mode=" + (route.Found ? "scatter" : "flop") +
+                    " at=" + position + " target=" + destination +
+                    " direction=" + (route.Found ? route.Direction.ToString() : "none") +
+                    " steps=" + route.Steps);
                 return true;
             }
             catch (Exception error) { plugin.Error(error); return false; }
@@ -282,10 +331,25 @@ namespace BurritoRun
         {
             internal readonly GameObject Object;
             internal readonly Vector3 Origin;
+            internal readonly Vector3 Destination;
             internal readonly float Born, Expires;
             internal readonly int Index;
-            internal LooseFish(GameObject obj, Vector3 origin, float born, float expires, int index)
-            { Object = obj; Origin = origin; Born = born; Expires = expires; Index = index; }
+            internal readonly bool Scatter;
+            internal readonly float DirectionX, DirectionY;
+            internal LooseFish(GameObject obj, Vector3 origin, Vector3 destination, float born,
+                float expires, int index, bool scatter)
+            {
+                Object = obj;
+                Origin = origin;
+                Destination = destination;
+                Born = born;
+                Expires = expires;
+                Index = index;
+                Scatter = scatter;
+                var direction = (destination - origin).normalized;
+                DirectionX = direction.x;
+                DirectionY = direction.y;
+            }
         }
     }
 }

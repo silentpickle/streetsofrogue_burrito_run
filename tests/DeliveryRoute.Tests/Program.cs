@@ -6,6 +6,7 @@ static void Check(bool condition, string name)
     if (!condition) throw new InvalidOperationException(name);
     Console.WriteLine("PASS " + name);
 }
+static bool Near(float value, float expected) => Math.Abs(value - expected) < 0.0001f;
 
 var stalled = new DeliveryRoute(0, 8);
 Check(!stalled.NeedsMeeting(1, 8, false), "native startup grace");
@@ -54,3 +55,18 @@ reputation.RecordAssault();
 Check(reputation.PeacefulHandoffs == 0, "assault resets recovery streak");
 reputation.Reset();
 Check(reputation.Reports == 0 && reputation.PeacefulHandoffs == 0, "run reset clears reputation");
+
+var openScatter = AquariumScatter.Choose(10, 20, 0, (x, y) => true);
+Check(openScatter.Found && Near(openScatter.X, 11.28f) && Near(openScatter.Y, 20) &&
+    openScatter.Direction == 0 && openScatter.Steps == 2, "shrimp takes two open cardinal tiles");
+var avoidWall = AquariumScatter.Choose(10, 20, 0, (x, y) => x < 10);
+Check(avoidWall.Found && avoidWall.Direction == 1 && Near(avoidWall.X, 8.72f) &&
+    avoidWall.Steps == 2, "shrimp turns away from blocked preferred direction");
+var stopBeforeWall = AquariumScatter.Choose(10, 20, 0, (x, y) => x <= 10.64f);
+Check(stopBeforeWall.Found && stopBeforeWall.Direction == 0 &&
+    stopBeforeWall.Steps == 1, "shrimp stops before second blocked tile");
+var boxedIn = AquariumScatter.Choose(10, 20, 0, (x, y) => false);
+Check(!boxedIn.Found, "boxed-in shrimp does not cross a wall");
+var wrappedDirection = AquariumScatter.Choose(10, 20, -1, (x, y) => true);
+Check(wrappedDirection.Found && wrappedDirection.Direction == 3 &&
+    Near(wrappedDirection.Y, 18.72f), "shrimp direction wraps safely");

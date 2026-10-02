@@ -10,7 +10,7 @@ namespace BurritoRun
     [BepInPlugin("local.streetsofrogue.burritorun", "Burrito Run", Version)]
     public sealed class Plugin : BaseUnityPlugin
     {
-        internal const string Version = "0.4.1";
+        internal const string Version = "0.4.2";
         internal static readonly string BuildLabel = typeof(Plugin).Assembly
             .GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion ?? Version;
         internal static Plugin Instance;

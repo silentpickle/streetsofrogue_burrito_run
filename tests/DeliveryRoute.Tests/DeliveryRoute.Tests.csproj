@@ -6,5 +6,6 @@
   <ItemGroup>
     <Compile Include="../../src/BurritoRun/DeliveryRoute.cs" Link="DeliveryRoute.cs" />
     <Compile Include="../../src/BurritoRun/CustomerReputation.cs" Link="CustomerReputation.cs" />
+    <Compile Include="../../src/BurritoRun/AquariumScatter.cs" Link="AquariumScatter.cs" />
   </ItemGroup>
 </Project>
