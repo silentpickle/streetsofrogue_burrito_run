@@ -168,6 +168,22 @@ namespace BurritoRun
         }
     }
 
+    [HarmonyPatch(typeof(ObjectReal), nameof(ObjectReal.DestroyMe), new[] { typeof(PlayfieldObject) })]
+    internal static class TestAquariumBreak
+    {
+        private static void Prefix(ObjectReal __instance, out bool __state)
+        {
+            __state = Plugin.Instance?.Aquarium?.ShouldBreak(__instance) == true;
+        }
+
+        private static void Postfix(ObjectReal __instance, PlayfieldObject __0, bool __state)
+        {
+            if (!__state) return;
+            try { Plugin.Instance?.Aquarium?.OnBroken(__instance, __0); }
+            catch (Exception error) { Plugin.Instance?.Error(error); }
+        }
+    }
+
     [HarmonyPatch(typeof(SteamGog), nameof(SteamGog.CloudSave))]
     internal static class LocalProfileCloud
     {

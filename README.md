@@ -6,11 +6,11 @@ For the complete project history, implementation methodology, evidence, failed e
 
 ## Current checkpoint — October 1
 
-Latest installed build: **0.3.1+20261002-004346** (build timestamp is UTC). Its startup smoke and named **safety recovery** scenario passed. The live scenario charged $20 across two real inventory handoffs and cleared one test-seeded safety flag; it did not simulate a courier hit. On the preceding 0.3.0 build, both **delivery handoff** and **drop/recovery** scenarios passed live. F4 previously selected a technical `DoorHelper`; 0.3.1 selected an actual `Door` in a live doorway snapshot. Earlier 0.2.0 tests covered panic/drop/pickup, several indoor entrances, native knocking/NPC response and armed replacement gunfire. Waiting couriers deliberately retain their native wandering behavior.
+Latest installed build: **0.4.0+20261002-010338** (build timestamp is UTC). It loads and passes the startup smoke, but its new **aquarium experiment has not yet been tested in a playable level**. The game was launched in quick-test mode and left at its normal title menu for that test. The prior 0.3.1 build passed the named **safety recovery** scenario: $20 across two real inventory handoffs cleared one test-seeded flag, without simulating a courier hit. The preceding 0.3.0 build passed **delivery handoff** and **drop/recovery** live. F4 previously selected a technical `DoorHelper`; 0.3.1 selected an actual `Door` in a live doorway snapshot. Earlier 0.2.0 tests covered panic/drop/pickup, several indoor entrances, native knocking/NPC response and armed replacement gunfire. Waiting couriers deliberately retain their native wandering behavior.
 
 The Services app shell is functional but still an **IMGUI overlay**, not a finished phone-shaped interface. Actual new-run reset, normal-mode weapon probabilities, death/knockout, full inventory and transition refunds still need focused live tests. A startup smoke does not certify gameplay.
 
-Recommended next milestone: start the aquarium experiment, with actual new-run reset as a separate unfinished check. A recognizable phone presentation can follow separately without moving service/pathfinding/reputation logic into UI.
+Recommended next step: test the aquarium in a normal single-player level. Actual new-run reputation reset is a separate unfinished check. A recognizable phone presentation can follow separately without moving service/pathfinding/reputation logic into UI.
 
 ## Play it on this Mac
 
@@ -19,6 +19,10 @@ Recommended next milestone: start the aquarium experiment, with actual new-run r
 3. Start a single-player run through the game's normal menu. The top-right **Burrito Run quick test** panel appears once you are on a playable level. Use **Add $30 test money**, then **Order here ($10)**. The courier starts after three seconds. Stay near the spot where you ordered to receive the item; leave it to make the courier drop the item there. **Courier drops package** tests recovery from an interruption.
 
 Opening Streets of Rogue directly through Steam or the app opens an ordinary session without the private loader. Confirm the bottom-left `Burrito Run` build label at the title screen before testing; if it is absent, quit that game and use `quick-test.command`.
+
+### Aquarium experiment (0.4.0, in-level test pending)
+
+On a playable quick-test level, stand in an open area and click **Spawn test aquarium** once. It asks the game's native spawner for a `FishTank` near you; the panel and event log report whether that object actually appears. Hit the tank to try the ordinary break path, or use **Break test aquarium (diagnostic)** to isolate the break hook. If the hook fires, the experiment attempts at most five native `Water` spill tiles and creates three short-lived, code-drawn fish/shrimp visuals. Those critters are scenery, not native NPCs or pickup items. Owner retaliation, electrical effects, a Pet Store room and a normal-play aquarium encounter are not implemented. Please report what you actually see; a `BURRITO_AQUARIUM_BREAK` log alone is not visual proof.
 
 You can also interact with any functioning in-game computer and choose **Order Burrito here ($10)**. The normal launcher, `play-burrito-run.command`, removes the test panel and uses a 45–90 second kitchen delay.
 
