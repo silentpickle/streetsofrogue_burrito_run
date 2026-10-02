@@ -70,3 +70,25 @@ Check(!boxedIn.Found, "boxed-in shrimp does not cross a wall");
 var wrappedDirection = AquariumScatter.Choose(10, 20, -1, (x, y) => true);
 Check(wrappedDirection.Found && wrappedDirection.Direction == 3 &&
     Near(wrappedDirection.Y, 18.72f), "shrimp direction wraps safely");
+
+Check(PetPolicy.Choose(true, false, 0, false) == PetIntent.Follow,
+    "pet follows its living owner without a snack");
+Check(PetPolicy.Choose(true, true, 3, false) == PetIntent.ChaseFood,
+    "pet detours toward nearby dropped food");
+Check(PetPolicy.Choose(true, true, 7, false) == PetIntent.Follow,
+    "pet ignores distant food");
+Check(PetPolicy.Choose(true, true, 0.5f, false) == PetIntent.Follow,
+    "pet stops chasing when it reaches food");
+Check(PetPolicy.Choose(true, true, 3, true) == PetIntent.Follow,
+    "pet does not immediately re-chase a sniffed snack");
+Check(PetPolicy.Choose(false, true, 3, false) == PetIntent.Wander,
+    "owner loss takes priority over food");
+
+Check(TestPanelInput.BlocksWorldClick(900, 450, 1024, 600, true),
+    "quick-test click is blocked before it becomes a punch");
+Check(!TestPanelInput.BlocksWorldClick(600, 450, 1024, 600, true),
+    "world click outside quick-test panel still works");
+Check(!TestPanelInput.BlocksWorldClick(900, 450, 1024, 600, false),
+    "hovering over quick-test panel does not block movement");
+Check(!TestPanelInput.BlocksWorldClick(900, 590, 1024, 600, true),
+    "bottom-edge click outside panel still works");

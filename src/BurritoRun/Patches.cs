@@ -71,6 +71,7 @@ namespace BurritoRun
 
     // Suppress gameplay input, not Unity IMGUI input. A short close grace prevents
     // the mouse click or Escape used to dismiss the phone leaking into gameplay.
+    // The quick-test panel also captures pointer-down frames before OnGUI runs.
     [HarmonyPatch]
     internal static class PhoneInput
     {
@@ -84,7 +85,7 @@ namespace BurritoRun
         [HarmonyPrefix]
         private static bool Prefix(ref bool __result)
         {
-            if (Plugin.Instance?.Phone?.BlocksInput != true) return true;
+            if (Plugin.Instance?.BlocksWorldInput != true) return true;
             __result = false;
             return false;
         }

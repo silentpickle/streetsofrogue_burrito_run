@@ -3,7 +3,7 @@
     <TargetFramework>net472</TargetFramework>
     <LangVersion>latest</LangVersion>
     <AssemblyName>BurritoRun</AssemblyName>
-    <Version>0.4.2</Version>
+    <Version>0.5.1</Version>
     <InformationalVersion>$(Version)+$([System.DateTime]::UtcNow.ToString('yyyyMMdd-HHmmss'))</InformationalVersion>
     <GameDir Condition="'$(GameDir)' == ''">/Users/davidcrandall/Library/Application Support/Steam/steamapps/common/Streets of Rogue</GameDir>
     <ManagedDir>$(GameDir)/StreetsOfRogueMac.app/Contents/Resources/Data/Managed</ManagedDir>

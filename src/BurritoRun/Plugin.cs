@@ -10,7 +10,7 @@ namespace BurritoRun
     [BepInPlugin("local.streetsofrogue.burritorun", "Burrito Run", Version)]
     public sealed class Plugin : BaseUnityPlugin
     {
-        internal const string Version = "0.4.2";
+        internal const string Version = "0.5.1";
         internal static readonly string BuildLabel = typeof(Plugin).Assembly
             .GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion ?? Version;
         internal static Plugin Instance;
@@ -21,7 +21,25 @@ namespace BurritoRun
         internal TestScenarios Scenarios;
         internal TestDiagnostics Diagnostics;
         internal AquariumService Aquarium;
+        internal PetService Pets;
         internal bool TestMode;
+        private Vector2 testPanelScroll;
+        private float testPanelInputBlockedUntil;
+        internal bool BlocksWorldInput
+        {
+            get
+            {
+                if (Phone?.BlocksInput == true) return true;
+                if (Time.realtimeSinceStartup < testPanelInputBlockedUntil) return true;
+                if (!TestMode || !Delivery.CanOrder(GameController.gameController?.playerAgent)) return false;
+                var mouse = Input.mousePosition;
+                bool pressed = Input.GetMouseButton(0) || Input.GetMouseButton(1) ||
+                    Input.GetMouseButtonDown(0) || Input.GetMouseButtonDown(1) ||
+                    Input.GetMouseButtonUp(0) || Input.GetMouseButtonUp(1);
+                return TestPanelInput.BlocksWorldClick(mouse.x, mouse.y,
+                    Screen.width, Screen.height, pressed);
+            }
+        }
         private string notice = "Burrito Run loaded. Quick Start a single-player run.";
         private float noticeUntil = 999999;
 
@@ -38,6 +56,7 @@ namespace BurritoRun
             Scenarios = new TestScenarios(this);
             Diagnostics = new TestDiagnostics(this);
             Aquarium = new AquariumService(this);
+            Pets = new PetService(this);
             new Harmony("local.streetsofrogue.burritorun").PatchAll(typeof(Plugin).Assembly);
             Log("BURRITO_BOOT plugin=" + Version + " unity=" + Application.unityVersion);
             if (Array.IndexOf(Environment.GetCommandLineArgs(), "--burrito-smoke") >= 0)
@@ -72,9 +91,13 @@ namespace BurritoRun
             catch (Exception error) { Error(error); Delivery.AbortAfterError(); }
             try { Aquarium.Tick(); }
             catch (Exception error) { Error(error); }
+            try { Pets.Tick(); }
+            catch (Exception error) { Error(error); }
             if (TestMode && Input.GetKeyDown(KeyCode.F3)) Inspector.Capture(GameController.gameController?.playerAgent);
             if (TestMode && Input.GetKeyDown(KeyCode.F4)) World.Capture(GameController.gameController?.playerAgent);
             if (TestMode && Input.GetKeyDown(KeyCode.F5)) Diagnostics.MarkIncident();
+            if (TestMode && Input.GetKeyDown(KeyCode.F6)) Pets.SpawnTestPet(GameController.gameController?.playerAgent);
+            if (TestMode && Input.GetKeyDown(KeyCode.F7)) Pets.ReleaseTestPet();
         }
 
         private void OnGUI()
@@ -87,7 +110,14 @@ namespace BurritoRun
                     "BURRITO RUN " + BuildLabel + "\n" + (Delivery.Active ? Delivery.Description : notice), style);
             GUI.Label(new Rect(15, Screen.height - 25, 500, 25), "Burrito Run " + BuildLabel);
             if (!TestMode || !Delivery.CanOrder(GameController.gameController?.playerAgent)) return;
-            GUILayout.BeginArea(new Rect(Screen.width - 275, 15, 260, 605), "Burrito Run quick test", GUI.skin.window);
+            var panelRect = new Rect(Screen.width - 275, 15, 260,
+                Math.Min(720, Math.Max(200, Screen.height - 30)));
+            var guiEvent = Event.current;
+            if ((guiEvent.type == EventType.MouseDown || guiEvent.type == EventType.MouseUp) &&
+                panelRect.Contains(guiEvent.mousePosition))
+                testPanelInputBlockedUntil = Time.realtimeSinceStartup + 0.25f;
+            GUILayout.BeginArea(panelRect, "Burrito Run quick test", GUI.skin.window);
+            testPanelScroll = GUILayout.BeginScrollView(testPanelScroll);
             GUILayout.Label(BuildLabel);
             GUILayout.Label("Orders arrive in 3 seconds.\nYou can also use any computer.\n" + Delivery.ServiceStatus);
             if (GUILayout.Button("Services phone (F2)")) Phone.Open(GameController.gameController.playerAgent);
@@ -97,6 +127,10 @@ namespace BurritoRun
             GUILayout.Label("AQUARIUM  |  " + Aquarium.Status);
             if (GUILayout.Button("Spawn test aquarium")) Aquarium.SpawnTestTank(GameController.gameController.playerAgent);
             if (GUILayout.Button("Break test aquarium (diagnostic)")) Aquarium.ForceBreak(GameController.gameController.playerAgent);
+            GUILayout.Label("TEST PET  |  " + Pets.Status);
+            if (GUILayout.Button("Spawn test dog (F6)")) Pets.SpawnTestPet(GameController.gameController.playerAgent);
+            if (GUILayout.Button("Drop one test snack")) Pets.DropTestSnack(GameController.gameController.playerAgent);
+            if (GUILayout.Button("Release test dog (F7)")) Pets.ReleaseTestPet();
             GUILayout.Label("SCENARIOS  |  " + Scenarios.Status);
             if (GUILayout.Button("Start: delivery handoff")) Scenarios.StartHandoff(GameController.gameController.playerAgent);
             if (GUILayout.Button("Start: drop and recover")) Scenarios.StartDropRecovery(GameController.gameController.playerAgent);
@@ -106,6 +140,7 @@ namespace BurritoRun
             if (GUILayout.Button("Order here ($10)")) Delivery.Order(GameController.gameController.playerAgent);
             if (GUILayout.Button("Courier drops package")) Delivery.ForceDrop();
             if (GUILayout.Button("Add $30 test money")) GameController.gameController.playerAgent.inventory.AddItem("Money", 30);
+            GUILayout.EndScrollView();
             GUILayout.EndArea();
         }
 
