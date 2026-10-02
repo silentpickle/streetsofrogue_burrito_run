@@ -84,6 +84,31 @@ Check(PetPolicy.Choose(true, true, 3, true) == PetIntent.Follow,
 Check(PetPolicy.Choose(false, true, 3, false) == PetIntent.Wander,
     "owner loss takes priority over food");
 
+var firstPetLevel = new PetLevelScope(1, 2, 3, 123, "1-1", 30);
+Check(PetLevelScope.ResetReason(firstPetLevel,
+    new PetLevelScope(1, 2, 3, 123, "1-1", 31), true, false, false, true) == null,
+    "pet remains one-per-level while the same level continues");
+Check(PetLevelScope.ResetReason(firstPetLevel, firstPetLevel, false, false, false, true) ==
+    "load-incomplete", "pet resets as a new level starts loading");
+Check(PetLevelScope.ResetReason(firstPetLevel, firstPetLevel, true, false, true, true) ==
+    "level-transitioning", "pet resets during a native level transition");
+Check(PetLevelScope.ResetReason(firstPetLevel, firstPetLevel, true, true, false, true) ==
+    "returning-to-menu", "pet resets on return to menu");
+Check(PetLevelScope.ResetReason(firstPetLevel, firstPetLevel, true, false, false, false) ==
+    "nonplayable-level", "pet resets in home base");
+Check(PetLevelScope.ResetReason(firstPetLevel,
+    new PetLevelScope(1, 2, 4, 123, "1-1", 30), true, false, false, true) ==
+    "agents-nest-changed", "pet catches a rebuilt level with reused controller and seed");
+Check(PetLevelScope.ResetReason(firstPetLevel,
+    new PetLevelScope(1, 2, 3, 456, "1-1", 30), true, false, false, true) ==
+    "seed-changed", "pet catches a new run with reused controller and floor");
+Check(PetLevelScope.ResetReason(firstPetLevel,
+    new PetLevelScope(1, 2, 3, 123, "1-2", 30), true, false, false, true) ==
+    "floor-changed", "pet catches a new floor without a transition frame");
+Check(PetLevelScope.ResetReason(firstPetLevel,
+    new PetLevelScope(1, 2, 3, 123, "1-1", 1), true, false, false, true) ==
+    "load-clock-restarted", "pet catches a same-seed replay with a restarted load clock");
+
 Check(TestPanelInput.BlocksWorldClick(900, 450, 1024, 600, true),
     "quick-test click is blocked before it becomes a punch");
 Check(!TestPanelInput.BlocksWorldClick(600, 450, 1024, 600, true),

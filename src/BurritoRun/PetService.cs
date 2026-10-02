@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 namespace BurritoRun
 {
@@ -12,6 +13,7 @@ namespace BurritoRun
         private readonly Plugin plugin;
         private readonly List<Renderer> hiddenRenderers = new List<Renderer>();
         private GameController controller;
+        private PetLevelScope levelScope;
         private Agent pet;
         private Agent owner;
         private GameObject dogVisual;
@@ -35,6 +37,7 @@ namespace BurritoRun
         {
             if (!plugin.TestMode || !plugin.Delivery.CanOrder(player))
             { plugin.Notice("Start a quick-test single-player level first."); return; }
+            ReconcileLevel(player.gc);
             if (spawnedThisLevel)
             { plugin.Notice("Only one test pet per level. Try a new level to reset."); return; }
 
@@ -51,6 +54,7 @@ namespace BurritoRun
                 { plugin.Notice("Native test-pet actor could not spawn; see log."); return; }
 
                 controller = gc;
+                levelScope = CaptureScope(gc);
                 pet = spawned;
                 owner = player;
                 spawnedThisLevel = true;
@@ -121,8 +125,7 @@ namespace BurritoRun
 
         internal void Tick()
         {
-            if (controller != null && controller != GameController.gameController)
-            { ClearForLevelChange(); return; }
+            if (spawnedThisLevel && ReconcileLevel(GameController.gameController)) return;
             if (pet == null) return;
             if (pet.dead)
             {
@@ -168,6 +171,37 @@ namespace BurritoRun
             var food = FindNearbyFood(out float foodDistance);
             if (PetPolicy.Choose(true, food != null, foodDistance, false) == PetIntent.ChaseFood)
                 Chase(food, foodDistance);
+        }
+
+        private static PetLevelScope CaptureScope(GameController gc) => new PetLevelScope(
+            gc.GetInstanceID(), SceneManager.GetActiveScene().handle,
+            gc.agentsNest != null ? gc.agentsNest.GetInstanceID() : 0,
+            gc.seedNum, gc.floorNameNum, gc.timeSinceLoad);
+
+        private bool ReconcileLevel(GameController gc)
+        {
+            if (!spawnedThisLevel) return false;
+            var live = gc != null ? CaptureScope(gc) : default;
+            var reason = gc == null ? "controller-gone" : PetLevelScope.ResetReason(
+                levelScope, live, gc.loadComplete, gc.returningToMainMenu,
+                gc.levelTransitioning,
+                gc.levelType != "HomeBase" && gc.levelType != "Attract" &&
+                gc.levelType != "Tutorial");
+            if (reason != null)
+            {
+                plugin.Log("BURRITO_PET_LEVEL_RESET reason=" + reason +
+                    " oldController=" + levelScope.ControllerId + " newController=" + live.ControllerId +
+                    " oldScene=" + levelScope.SceneHandle + " newScene=" + live.SceneHandle +
+                    " oldNest=" + levelScope.AgentsNestId + " newNest=" + live.AgentsNestId +
+                    " oldSeed=" + levelScope.Seed + " newSeed=" + live.Seed +
+                    " oldFloor=" + levelScope.Floor + " newFloor=" + live.Floor +
+                    " oldLoadClock=" + levelScope.TimeSinceLoad.ToString("F2") +
+                    " newLoadClock=" + live.TimeSinceLoad.ToString("F2"));
+                ClearForLevelChange();
+                return true;
+            }
+            levelScope = live;
+            return false;
         }
 
         private bool TryFindSpot(Agent player, out Vector2 spot)
@@ -289,6 +323,7 @@ namespace BurritoRun
             if (dogVisual != null) UnityEngine.Object.Destroy(dogVisual);
             dogVisual = null;
             controller = null;
+            levelScope = default;
             pet = null;
             owner = null;
             spawnedThisLevel = false;
