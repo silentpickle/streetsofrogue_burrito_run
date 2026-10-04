@@ -3,7 +3,7 @@
     <TargetFramework>net472</TargetFramework>
     <LangVersion>latest</LangVersion>
     <AssemblyName>BurritoRun</AssemblyName>
-    <Version>0.5.2</Version>
+    <Version>0.6.0</Version>
     <InformationalVersion>$(Version)+$([System.DateTime]::UtcNow.ToString('yyyyMMdd-HHmmss'))</InformationalVersion>
     <GameDir Condition="'$(GameDir)' == ''">/Users/davidcrandall/Library/Application Support/Steam/steamapps/common/Streets of Rogue</GameDir>
     <ManagedDir>$(GameDir)/StreetsOfRogueMac.app/Contents/Resources/Data/Managed</ManagedDir>
@@ -16,10 +16,12 @@
     <Reference Include="Assembly-CSharp"><HintPath>$(ManagedDir)/Assembly-CSharp.dll</HintPath><Private>false</Private></Reference>
     <Reference Include="UnityEngine"><HintPath>$(ManagedDir)/UnityEngine.dll</HintPath><Private>false</Private></Reference>
     <Reference Include="UnityEngine.CoreModule"><HintPath>$(ManagedDir)/UnityEngine.CoreModule.dll</HintPath><Private>false</Private></Reference>
+    <Reference Include="UnityEngine.AudioModule"><HintPath>$(ManagedDir)/UnityEngine.AudioModule.dll</HintPath><Private>false</Private></Reference>
     <Reference Include="UnityEngine.IMGUIModule"><HintPath>$(ManagedDir)/UnityEngine.IMGUIModule.dll</HintPath><Private>false</Private></Reference>
     <Reference Include="UnityEngine.TextRenderingModule"><HintPath>$(ManagedDir)/UnityEngine.TextRenderingModule.dll</HintPath><Private>false</Private></Reference>
     <Reference Include="UnityEngine.InputLegacyModule"><HintPath>$(ManagedDir)/UnityEngine.InputLegacyModule.dll</HintPath><Private>false</Private></Reference>
     <Reference Include="UnityEngine.Physics2DModule"><HintPath>$(ManagedDir)/UnityEngine.Physics2DModule.dll</HintPath><Private>false</Private></Reference>
     <Reference Include="Mirror"><HintPath>$(ManagedDir)/Mirror.dll</HintPath><Private>false</Private></Reference>
+    <Reference Include="Newtonsoft.Json"><HintPath>$(ManagedDir)/Newtonsoft.Json.dll</HintPath><Private>false</Private></Reference>
   </ItemGroup>
 </Project>

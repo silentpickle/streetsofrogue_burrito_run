@@ -5,7 +5,7 @@ using UnityEngine;
 
 namespace BurritoRun
 {
-    // A second, immediately written event trail survives an abrupt game exit.
+    // Ordered background event trail; abrupt exit can lose queued records.
     // BepInEx's full log remains the source for engine and stack-trace details.
     internal sealed class TestDiagnostics
     {
@@ -13,6 +13,9 @@ namespace BurritoRun
         private readonly string session = Guid.NewGuid().ToString("N").Substring(0, 8);
         private string eventPath;
         private bool writeFailed;
+        private long eventBytes;
+        internal string Session => session;
+        internal string LogDirectory { get; private set; }
 
         internal TestDiagnostics(Plugin plugin)
         {
@@ -22,6 +25,7 @@ namespace BurritoRun
             try
             {
                 var logDir = Path.Combine(Path.GetDirectoryName(profile), "logs");
+                LogDirectory = logDir;
                 Directory.CreateDirectory(logDir);
                 eventPath = Path.Combine(logDir, "events-" + DateTime.UtcNow.ToString("yyyyMMdd-HHmmss", CultureInfo.InvariantCulture) + "-" + session + ".log");
             }
@@ -47,19 +51,20 @@ namespace BurritoRun
         internal void Write(string line)
         {
             if (writeFailed || eventPath == null) return;
-            try
+            string text = DateTime.UtcNow.ToString("O", CultureInfo.InvariantCulture) + " " + line + Environment.NewLine;
+            if (!plugin.CaptureWriter.Enqueue(() =>
             {
-                File.AppendAllText(eventPath, DateTime.UtcNow.ToString("O", CultureInfo.InvariantCulture) + " " + line + Environment.NewLine);
-            }
-            catch (Exception error)
-            {
+                int length = System.Text.Encoding.UTF8.GetByteCount(text);
+                if (eventBytes + length > 8 * 1024 * 1024) throw new IOException("Event log 8 MiB cap reached");
+                plugin.CaptureWriter.AppendBuffered(eventPath, text); eventBytes += length;
+            }, 64L + text.Length * 4L, true))
                 writeFailed = true;
-                plugin.Warn("Event log stopped: " + error.Message);
-            }
         }
 
         internal void MarkIncident()
         {
+            plugin.Trace?.Incident("user-mark");
+            plugin.Awareness?.Incident("user-mark");
             var player = GameController.gameController?.playerAgent;
             var courier = plugin.Delivery.Courier;
             plugin.Log("BURRITO_MARK player=" + (player != null ? player.UID.ToString() : "none") +

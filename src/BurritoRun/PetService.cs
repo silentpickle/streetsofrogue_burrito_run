@@ -30,7 +30,10 @@ namespace BurritoRun
         private bool deathLogged;
         private string status = "No test pet on this level.";
 
-        internal PetService(Plugin plugin) { this.plugin = plugin; }
+        internal PetService(Plugin plugin) { this.plugin = plugin; Barks = new PetBarkService(plugin); }
+        internal PetBarkService Barks { get; }
+        internal Agent Actor => pet;
+        internal Agent Owner => owner;
         internal string Status => status;
 
         internal void SpawnTestPet(Agent player)
@@ -60,6 +63,7 @@ namespace BurritoRun
                 spawnedThisLevel = true;
                 released = false;
                 deathLogged = false;
+                Barks.Reset();
                 // A follower should begin as an ally, not merely a neutral Courier
                 // whose first incidental shove can turn into a lethal feud.
                 try
@@ -100,6 +104,18 @@ namespace BurritoRun
             plugin.Notice("Test dog lost its owner and is wandering on native AI.");
         }
 
+        internal void BarkTestPet()
+        {
+            ReconcileLevel(GameController.gameController);
+            Barks.TryManual(pet, owner, !released && intent == PetIntent.Follow);
+        }
+
+        internal void DistractGuard()
+        {
+            ReconcileLevel(GameController.gameController);
+            Barks.TryGuard(pet, owner, !released && intent == PetIntent.Follow);
+        }
+
         internal void DropTestSnack(Agent player)
         {
             if (!plugin.TestMode || player == null || player != owner || pet == null ||
@@ -132,6 +148,7 @@ namespace BurritoRun
                 if (!deathLogged)
                 {
                     deathLogged = true;
+                    Barks.Reset("pet-dead");
                     status = "Test pet died. Start a new level for another.";
                     plugin.Log("BURRITO_PET_DEAD pet=" + pet.UID + " at=" + pet.tr.position);
                 }
@@ -149,6 +166,8 @@ namespace BurritoRun
             if (!released && (owner == null || owner.dead || owner.gc != controller))
                 Release("owner-lost");
             if (released) return;
+
+            Barks.Tick(pet, owner, intent == PetIntent.Follow);
 
             if (intent == PetIntent.ChaseFood)
             {
@@ -298,6 +317,7 @@ namespace BurritoRun
 
         private void Release(string reason)
         {
+            Barks.Reset(reason);
             released = true;
             targetFood = null;
             if (pet != null && !pet.dead)
@@ -317,6 +337,7 @@ namespace BurritoRun
 
         private void ClearForLevelChange()
         {
+            Barks.Reset("level-change");
             foreach (var renderer in hiddenRenderers)
                 if (renderer != null) renderer.enabled = true;
             hiddenRenderers.Clear();

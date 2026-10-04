@@ -9,6 +9,8 @@ static void Check(bool condition, string name)
 static bool Near(float value, float expected) => Math.Abs(value - expected) < 0.0001f;
 
 var stalled = new DeliveryRoute(0, 8);
+TraceChecks.Run(Check);
+WorldChecks.Run(Check);
 Check(!stalled.NeedsMeeting(1, 8, false), "native startup grace");
 Check(!stalled.NeedsMeeting(11, 8, true), "no premature fallback");
 Check(stalled.NeedsMeeting(12, 8, true), "stalled route fallback");
@@ -83,6 +85,31 @@ Check(PetPolicy.Choose(true, true, 3, true) == PetIntent.Follow,
     "pet does not immediately re-chase a sniffed snack");
 Check(PetPolicy.Choose(false, true, 3, false) == PetIntent.Wander,
     "owner loss takes priority over food");
+
+var barking = new PetBarkPolicy();
+Check(!PetBarkPolicy.GuardInRange(4.99f), "guard probe avoids native close-range investigation cutoff");
+Check(PetBarkPolicy.GuardInRange(5), "guard probe accepts minimum useful separation");
+Check(PetBarkPolicy.GuardInRange(6.5f), "guard probe stays inside louder native hearing radius");
+Check(!PetBarkPolicy.GuardInRange(6.51f), "guard probe rejects overly distant targets");
+Check(!PetBarkPolicy.UsefulApproach(false, 2, 2), "ordinary patrol movement cannot certify distraction");
+Check(!PetBarkPolicy.UsefulApproach(true, 2, 0), "moving sideways is not approach to the bark");
+Check(!PetBarkPolicy.UsefulApproach(true, 0.63f, 0.63f), "tiny noise-goal movement is not useful approach");
+Check(PetBarkPolicy.UsefulApproach(true, 0.64f, 0.64f), "one native tile of approach is measurable");
+barking.Reset(10);
+Check(!barking.TryBegin(14.99f, 100), "new dog gets a quiet five-second grace");
+Check(barking.TryBegin(15, 100), "bark starts after spawn grace");
+Check(!barking.TryBegin(34.99f, 101), "manual and automatic barks share the cooldown");
+Check(!barking.TryBegin(35, 100), "dog does not keep barking at the same stranger");
+Check(barking.TryBegin(35, 101), "different stranger can trigger a bark after cooldown");
+Check(!barking.TryBegin(35, 102), "unchanged paused game clock cannot trigger another bark");
+for (int index = 2; index < PetBarkPolicy.LevelLimit; index++)
+    Check(barking.TryBegin(15 + index * PetBarkPolicy.Cooldown, 100 + index),
+        "distinct stranger bark " + (index + 1));
+Check(!barking.TryBegin(1000, 999) && barking.Count == PetBarkPolicy.LevelLimit,
+    "per-level bark cap prevents an endless disturbance loop");
+barking.Reset(1000);
+Check(barking.Count == 0 && !barking.HasBarkedAt(100) &&
+    barking.TryBegin(1005, 100), "new level resets bark history with a fresh grace");
 
 var firstPetLevel = new PetLevelScope(1, 2, 3, 123, "1-1", 30);
 Check(PetLevelScope.ResetReason(firstPetLevel,

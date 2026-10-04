@@ -1,0 +1,58 @@
+# Small native World Awareness harness
+
+Close Streets of Rogue, then run from this repository:
+
+```bash
+make world-harness
+```
+
+For the functional fixtures followed by an automatic stationary performance comparison:
+
+```bash
+make world-performance
+```
+
+This takes about 11 minutes plus startup and needs no inspector clicks. After both fixtures retire, it runs Off / Inspect / Record three times on the same generated level and build, with 10 seconds of warm-up and 60 seconds of measurement per trial. Player movement over 0.05 units, health changes, combat, focus changes, pauses or world changes interrupt the run. Residents continue simulating; population counts and camera mapping are recorded at trial boundaries. Camera mapping stability is checked at boundaries, whereas player/focus guards run every frame. The common coordinator cost is included in diagnostic timing. Stable background focus is permitted and recorded; background captures do not establish foreground performance.
+
+The reporter requires nine complete ordered trials, checks native summary agreement and context, then compares the median trial frame p95 against Off. Numeric acceptance requires Off below 33.333 ms, active modes within 5% of Off and below 33.333 ms, and every active trial below 1 ms diagnostic mean / 2 ms diagnostic p95. `NEEDS INVESTIGATION` means complete evidence missed a numeric target; `INCOMPLETE/FAIL` means the capture or scenario cannot support the comparison. Both exit nonzero. The performance watchdog is 900 seconds. Older partial benchmark builds are retained separately. See [the implementation plan](WORLD_AWARENESS_PERFORMANCE_PLAN.md).
+
+The command builds/installs the plugin, copies settings and unlocks into a new isolated profile, starts single-player through the native menus, and runs two fresh fixtures. No NPC hunting, dog positioning, incident key or inspector clicks are needed. Each fixture owns one native Courier, chooses one of at most 32 nearby safe, walkable, unoccupied, clear-LOS positions and forces `DoNothing` as explicit test setup. It never creates a dog or changes resident goals/factions/positions. Geometry and native AI remain the game's own; this is controlled setup on a generated level, not a deterministic authored room.
+
+The harness copies the existing test profile's separate `TechSettings.dat` to avoid first-run display setup. It waits for native menu initialization, chooses Quick Start and Soldier, confirms start, then accepts the game's final `CharacterSelect` choice before waiting for final level loading. This installed build disables the menu's parent object when play resumes; starting from Home Base requires opening the native main menu first. Collection runs in the background only for this harness process. No persistent application setting is changed in either existing profile.
+
+`WorldFixture.cs` contains the native setup/removal calls. `WorldHarness.cs` schedules phases and records terminal reasons. `WorldAwarenessHarness.cs` only reads the existing registry and native evidence; it cannot insert the fixture into the index. Normal lifecycle hooks/census must discover it and complete deferred metadata. Cleanup checks the fixture's native instance/UID before native removal; unrelated actors are never reset or deleted.
+
+For each repeat, saved evidence includes:
+
+- Native/indexed identity, activation, collection, timestamps, position and actual actor fields.
+- Within, band, outside and whole-level query membership for that actor.
+- Numeric native geometric LOS, cone/range, camera, navigation and selected-tile evidence.
+- Player/actor state immediately before and after the same-frame inspection reads.
+- Owned cleanup request followed by actual native inactivity and absence from active index results.
+
+The offline report independently checks those numbers, order, identity freshness, capture loss and closure. `COMPLETE` is a collector status, not a pass. A changed native state, stale/partial snapshot, failed query, missing retirement or interrupted run cannot pass. State invariance covers the recorded fields in one synchronous read sequence; it does not prove every inspector UI/input path or all internal native fields are immutable. LOS remains geometric evidence, not hearing, native recognition, reachable routes or final rendered pixels.
+
+Every command creates `.runtime/world-harness/TIMESTAMP-PID/` with its own `profile/`, engine/plugin/event/world logs, build receipt and preserved DLL. `report.md` gives the short result, `report.json` the computed checks, and `world-report.md` the general capture summary. The command exits zero only when the native report passes and the launch exits cleanly. Re-read any saved run without launching:
+
+```bash
+python3 scripts/report-world-harness.py .runtime/world-harness/TIMESTAMP-PID
+```
+
+The collector allows 120 wall seconds for startup and 15 seconds per discovery/retirement phase. It records timeouts, world/player/clock changes, actor loss, exceptions and shutdown as incomplete results. A separate 180-second process watchdog handles a stopped engine loop. Failed captures and profiles stay saved; rerunning always creates a fresh profile and fixture. Original saves and the existing `.runtime/profile` are retained.
+
+This is the first native functional slice. It does not complete all WA-01–WA-14 requirements. Pool reuse is only verified when the native instance is actually reused; distinct keys alone do not establish that. Multi-level histories, short-lived effects, door variations, full input isolation, allocation/performance comparisons and modest hardware remain separate gates. Dog behavior stays unchanged until the relevant World Awareness gates are established.
+
+## Validation
+
+The optional pressure slice runs with `make world-pressure`. It repeats the two functional fixtures, requires a clean normal-quality baseline, then keeps one owned Courier as a lifecycle-core-to-detail witness. At most 32 batches of 64 native Noise effects are spawned with attraction disabled and immediately recycled. Existing inspector hooks supply the measured cost; the fixture's emission loop is excluded from diagnostic accounting. Emission stops on reduction, saturation or the cap. Native player/world/clock/focus guards stay active. Recovery is observed naturally for at least 30 seconds, with a 150-second recovery limit and 300-second process watchdog. A cap that never triggers reduction is inconclusive. The report requires actual activation/recycling, fresh native pooling IDs/keys, ordinary completed actor detail, reduced actor-detail limits and return to normal quality before owned cleanup. This is a lifecycle burst check, not a busy Off/Inspect/Record comparison. See [pressure plan](WORLD_AWARENESS_PRESSURE_PLAN.md).
+
+Native validation results are recorded in `WORLD_AWARENESS_VALIDATION.md` and `PAUSE_HANDOFF.md`. Automated regression checks:
+
+```bash
+bash scripts/check.sh
+bash scripts/test-routing.sh
+python3 -m unittest discover -s tests -p 'test_*report.py'
+git diff --check
+```
+
+Report tests include positive evidence and rejection of missing observations, capture loss, interruption, state changes, stale/lifecycle-only detail, wrong query membership, retirement requests without inactivity, duplicates and malformed values. The assembly inspection tool now traverses nested native types so coroutine startup prerequisites can be audited directly.

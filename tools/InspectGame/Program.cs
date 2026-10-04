@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using Mono.Cecil;
 using Mono.Cecil.Cil;
@@ -10,13 +11,21 @@ if (args.Length < 2)
 }
 
 using var assembly = AssemblyDefinition.ReadAssembly(args[0]);
+static IEnumerable<TypeDefinition> Types(IEnumerable<TypeDefinition> roots)
+{
+    foreach (var type in roots)
+    {
+        yield return type;
+        foreach (var child in Types(type.NestedTypes)) yield return child;
+    }
+}
 var typeFilter = args[1];
 var methodFilter = args.Length > 2 ? args[2] : null;
 var namesOnly = args.Length > 3 && args[3] == "--names-only";
 if (typeFilter == "--literal")
 {
     if (methodFilter == null) return 1;
-    foreach (var type in assembly.MainModule.Types)
+    foreach (var type in Types(assembly.MainModule.Types))
         foreach (var method in type.Methods.Where(method => method.HasBody))
         {
             var instructions = method.Body.Instructions;
@@ -32,7 +41,7 @@ if (typeFilter == "--literal")
         }
     return 0;
 }
-foreach (var type in assembly.MainModule.Types.Where(type =>
+foreach (var type in Types(assembly.MainModule.Types).Where(type =>
     (typeFilter == "*" || type.FullName.Contains(typeFilter, StringComparison.OrdinalIgnoreCase)) &&
     (methodFilter == null || type.Methods.Any(method =>
         method.Name.Contains(methodFilter, StringComparison.OrdinalIgnoreCase)))))

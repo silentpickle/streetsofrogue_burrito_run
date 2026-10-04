@@ -14,6 +14,30 @@ This is an ordered set of experiments, not a feature promise. The objective is e
 
 These are responsibility areas, not simulated endorsements or a requirement to run multiple agents for every change.
 
+## Current direction — October 4
+
+Use `make world-harness` for the first repeatable native World Awareness slice. Two fresh launches/four fixture-owned actors passed discovery, query memberships, numeric inspection, sampled state invariance and retirement without user choreography. Setup mutations remain outside the inspector. See [harness scope](WORLD_AWARENESS_HARNESS.md); this is targeted functional evidence, not completion of every requirement or permission to expand dog behavior.
+
+Complete World Awareness validation before adding more NPC behavior: test the installed burst correction (one lighter busy Record sample captured; ordinary suite interrupted after six valid trials), compare corrected ordinary/busy modes, finish native gates and allocation profiling, then validate modest hardware. See [plan](WORLD_AWARENESS_PLAN.md), [requirements](WORLD_AWARENESS_REQUIREMENTS.md) and [handoff](PAUSE_HANDOFF.md). The older stationary suite is complete evidence for its build; busy acceptance is open.
+
+After this foundation, build bounded dog interest/response using shared proximity and perception: food first, then hydrant when its object/effect semantics are verified. Movement recovery stays separate; a nearby door is only a candidate. Prioritize a repeatable useful encounter over more species. Keep persistence across levels at “probably no.” Native windows suffice for now; bars movement-blocking/sight-permitting policy is planned, not implemented. Detailed barrier simulation is deferred.
+
+The ordered experiment history below remains useful, but its old “next” tests are superseded by this current direction. Follow/food/release/panel-click observations have since passed limited user tests; a Pet Store fixture remains unbuilt.
+
+Useful native pattern recorded October 4: window damage can create a dedicated WindowHelper incident; native ownership/building rules select a responder and NoiseReact adds a path-to-window goal. See [window investigation findings](KNOWLEDGEBASE.md#native-window-investigation--inspected-october-4). Candidate reuse is incident identity/location → eligible actor → native response goal. Quiet targets still need discovery through the world query service. This is inspected native code, not a newly implemented dog behavior or proof of culprit identification in a particular encounter.
+
+## Historical October 2 direction
+
+- **Accuracy checkpoint (0.5.5):** numeric structured attempts and bounded history/environment capture are implemented. Reports recompute movement; first-sample and goal/gap resets exclude prior patrol motion. Startup and no-pet rejection/incident paths passed live; populated NPC/environment, emission and interruption paths remain unverified. Complete those gates through native fixture/setup work; see `LOGGING.md`.
+
+- **Reduce manual testing first:** the user flagged the setup and verification burden. Pause new behaviors and the manually arranged guard probe; follow `TESTING_PLAN.md` for complete attempt capture, bounded NPC/environment history and one repeatable native fixture. The user should assess a short working encounter after the developer verifies its mechanics. A standalone prototype is a later comparison if these two slices do not make native testing practical.
+
+- **Focused guard-distraction probe (0.5.4):** automatic stranger barking starts off. F9/**Distract guard** selects a neutral native Guard/Patrol-goal NPC in clear view, 5–6.5 world units from the dog, and emits normal noise at native volume 1 (7.4-unit radius). It shares existing bark limits. Track whether the target approaches at least one 0.64-unit tile while executing the matching native noise goal; ordinary patrol displacement alone is not success. Live guard distraction remains unproven. A closer NPC can terminate its native Curious subgoal within four units with line of sight, which plausibly explains the earlier weak payoff.
+
+- **Pet persistence across levels: probably no.** Keep pets local to a level; do not add transport, pet saving or respawning across levels without revisiting this decision.
+- **Prioritize interaction per NPC over more species or simulation.** Panel-click spawning, following, snack approach and voluntary release have user-observed passes on 0.5.2. Next is a bounded bark that uses native noise/attention and is judged by visible NPC response.
+- The 0.5.3 bark probe uses a procedural woof, native `Normal` noise attributed to the dog, a five-second spawn grace, a shared 20-game-second cooldown, once per neutral stranger, and at most six barks per level. F8/the panel can request the same behavior. Native `NoiseReact` activation is logged; it does not certify a visible reaction. Native consequences are observed rather than assigned. Live session `1ff4e80c` logged two automatic barks and two native Hobo noise reactions; the user saw no consequences. Manual emission/audio remain unconfirmed. Next assess useful distraction, such as moving a guard off position, before multiplying pet behaviors.
+
 ## Ordered experiments
 
 1. **Test playground and delivery finish line.** Version 0.3.0 added named delivery handoff/drop-recovery scenarios, F4 object/NPC snapshots, F5 incident marks and immediate event files. Both delivery scenarios passed once live with a $10 charge and real inventory gain. Installed 0.3.1 filters the technical `DoorHelper` from F4 selection and adds a test-seeded safety-recovery scenario; the latter passed live with two paid handoffs and a cleared flag. A live F4 snapshot then selected an actual `Door` near the player while skipping helper objects. Actual new-run reset remains unverified; it need not block the aquarium experiment. A scenario must be reproducible from a fresh run; no fake world-reset button. The existing phone can receive a visual pass separately.

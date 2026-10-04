@@ -51,6 +51,7 @@ namespace BurritoRun
             customer = null;
             plugin.Inspector.Hide();
             plugin.World.Hide();
+            plugin.Awareness?.HideDetail();
             inputBlockedUntil = Time.realtimeSinceStartup + 0.2f;
             if (gc != null) gc.SetTimeScale();
             plugin.Log("BURRITO_PHONE closed");
@@ -59,6 +60,7 @@ namespace BurritoRun
         internal void Draw()
         {
             if (!IsOpen) return;
+            if (plugin.Awareness?.IsPausedDetail == true) { plugin.Awareness.DrawDetail(); return; }
             if (plugin.Inspector.Visible) { plugin.Inspector.Draw(); return; }
             if (plugin.World.Visible) { plugin.World.Draw(); return; }
             var width = Mathf.Min(360, Screen.width - 30);
