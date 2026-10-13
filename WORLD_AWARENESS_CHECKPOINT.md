@@ -1,6 +1,10 @@
 # World Awareness catalog
 
-Updated October 4, 2026. [PAUSE_HANDOFF.md](PAUSE_HANDOFF.md) is the operational authority. Latest native-validated install is `0.6.0+20261004-214024` / `a9a50717`; the automatic pressure harness passed 44 capture checks and quit. Earlier burst comparisons in `e5a30132` remain preserved. All working-tree work remains uncommitted.
+October 7 installed hydrant checkpoint: `0.6.0+20261008-052320`, `238d7320`, **67 native gates PASS**, SHA256 `89f90828578061f48c3f14229123c8372dd6ebbe2e00ed9344e75534ed798292`, `.runtime/world-harness/20261007-232321-7312/report.md`. Closed clean stream; installed binary matches. [Hydrant plan](HYDRANT_INTERACTION_PLAN.md) retains failed pilots, source scope and limits; [handoff](PAUSE_HANDOFF.md) owns the separate current playable run.
+
+Earlier native-validated food build: `0.6.0+20261007-051237`, `2cf1bc70`, 66 gates, SHA256 `dbcd7d81946223fdb987ba73a93dca826b6321448852b5c42717450af0437d6a`; `.runtime/world-harness/20261006-231238-67676/`; game closed. Five food cases, native eating/Follow and retained one-per-level limit pass. See [food details](FOOD_INTERACTION_PLAN.md) and [operational handoff](PAUSE_HANDOFF.md). Older readiness/busy captures below remain separately attributed.
+
+Updated October 6, 2026. [PAUSE_HANDOFF.md](PAUSE_HANDOFF.md) is the operational authority. The prior readiness install is `0.6.0+20261007-035337` / `541591f7`; the final base harness passed 29 ownership/discovery/read/retirement gates and quit. Advanced readiness passed 49 gates, native correctness 45, and the controlled busy comparison 67 plus numeric targets; each retains its separate binary/receipt. Earlier evidence remains historical. Current readiness/food source and documentation changes are uncommitted.
 
 Native harness: [workflow](WORLD_AWARENESS_HARNESS.md), `make world-harness`, `src/BurritoRun/{WorldFixture,WorldHarness,WorldAwarenessHarness}.cs`, `scripts/{world-harness.sh,report-world-harness.py}`, `tests/test_world_harness_report.py`. Evidence/DLL/hash receipts: `.runtime/world-harness/20261004-145335-71846/` and `.runtime/world-harness/20261004-145512-72124/`; both `report.md` files PASS 29 checks. Earlier startup/interruption/timeout captures remain in sibling directories as incomplete evidence.
 
@@ -45,7 +49,7 @@ Paths below are local artifacts; `.runtime` is not a published package. Backups 
 | `.runtime/awareness-timescale-set-native.txt` | Native clock/freeze audit |
 | `.runtime/visibility-los-*-native.txt` | Native LOS/mask/object audit; does not establish every barrier case |
 
-Latest saved checks: 242 C# assertions, 64 Python report tests, build/analyzers/format and whitespace checks passed. These are source/report checks; installed burst changes have one lighter busy Record native sample; bounded frame-budget reduction/recovery is verified in a9a50717; sustained window/backpressure paths remain open. Synthetic sequences matched summary statistics, not recorded frame ordering.
+Historical October 4 checks: 242 C# assertions, 64 Python report tests, build/analyzers/format and whitespace checks passed. These are source/report checks; installed burst changes have one lighter busy Record native sample; bounded frame-budget reduction/recovery is verified in a9a50717; sustained window/backpressure paths remain open. Synthetic sequences matched summary statistics, not recorded frame ordering.
 
 ## Session ledger
 
@@ -73,3 +77,13 @@ Earlier catalog entries are [preserved](docs/history/2026-10-04-before-consolida
 ## Corrected ordinary suite interruption
 
 Six valid trials, two per mode; seventh Off trial invalid at 42.6606 measured seconds on a native clock pause (mainScale=0, nativeFreeze=false, inspector/phone closed; initiator unknown). No full suite completion. The valid six have zero >50 ms frames or losses; partial median frame p95 changes +0.76% Inspect/+0.81% Record, with active diagnostics within <1 ms mean/<2 ms p95. Completion focus mixed (five unfocused, one focused); foreground performance is not established. Saved `.runtime/benchmark-e5a30132-ordinary-partial.{md,json}`. Preserve valid and invalid evidence; collect one remaining trial per mode, not a repeat of the whole suite.
+
+
+## October 6 roadmap to step 4
+
+See [execution ledger](WORLD_AWARENESS_TO_DOG_PLAN.md) for the exact profiles/builds/hashes, successful native slices and preserved non-passing pilots. Source additions are `src/BurritoRun/WorldReadiness.cs`, native fixture helpers and read-only harness evidence access; `report_world_readiness.py` independently asserts the extensions. Commands are `make world-advanced`, `make world-native` and `make world-busy`. Recovery policy correction is in `WorldIndex.cs`. Latest source checks: 244 C# assertions, 82 Python report tests, zero compiler/analyzer/format warnings/errors. Busy comparison passes; dog behavior remains unchanged.
+
+Prior readiness install, before the food follow-on: `0.6.0+20261007-035337`, session `541591f7`, `.runtime/world-harness/20261006-215337-37447/`. The original two-repeat native harness passed 29 gates with the new instance/UID ownership guard; closed clean capture, preserved DLL/receipt SHA256 `627906cfd7f3135852642d69796fc49292c2e2540c63d269b40046c9879d05da`, matching the installed loader DLL at that checkpoint. That run closed. Its build/analyzer/format, 244 C# assertions, 82 Python report tests, shell syntax and whitespace checks pass. Source and documentation edits remain uncommitted. That readiness build left dog behavior unchanged; the subsequent food slice is documented above.
+Food implementation: `PetPolicy.cs`/`PetService.cs` consume read-only `WorldAwareness.ResolveLive` query results; `PetFoodFixture.cs` owns test writes; `PetFoodHarness.cs` orchestrates/observes; `scripts/report_pet_food.py` and `tests/test_pet_food_report.py` recompute/reject unsupported outcomes.
+
+October 6 requested visible rerun: `2cf1bc70` / `0.6.0+20261007-051237` passed 66 gates in `.runtime/world-harness/20261006-231238-67676/`. Source behavior unchanged; installed DLL matches the saved receipt. A preceding attempt in `.runtime/world-harness/20261006-231020-66891/` remains INTERRUPTED after focus changed (healthy sniff, eating/Follow and removal had completed). The rerun started with the game focused and closed cleanly. Original implementation checkpoint `249a0ae7` / `0.6.0+20261007-044122` remains preserved separately.

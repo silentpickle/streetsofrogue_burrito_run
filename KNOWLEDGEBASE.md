@@ -1,11 +1,44 @@
 # Burrito Run knowledgebase
 
-Updated October 4, 2026. This private BepInEx prototype uses Streets of Rogue's native world/NPC systems to explore small interactions. The current push is reusable **read-only world awareness and trustworthy evidence**, before expanding dog desires or movement recovery.
+**October 20 publication checkpoint:** behavior work is paused for a platform
+reassessment. Begin with [current state](docs/CURRENT_STATE.md) and the
+[public documentation map](docs/README.md). Dated scope/next-action notes below
+are preserved history.
+
+**Native NPC coordination:** [NPC_COORDINATION.md](NPC_COORDINATION.md) tracks the
+canonical Hobo enrollment fix, native recruitment/employment/job precedence and
+v1-compatible replay. It owns current verification status; earlier checkpoints
+below remain historical.
+
+**October 12 dialogue/behavior overlap review:** [NPC dialogue and behavior map](NPC_DIALOGUE_BEHAVIOR_MAP.md)
+connects the observed menus and our favor lines to native recruitment, role jobs,
+bribery/threats, relationships, gifts, money, quests and planned fears/desires.
+It also records the older food experiment's `SlumDweller` / native `Hobo` identity
+gap; its fixture pass is not canonical Slum Dweller compatibility proof.
+
+**Current scope — October 12 banana favors:** the user authorized one optional
+banana encounter with competing $15 / First Aid Kit rewards on ordinary generated
+levels. [BANANA_QUEST.md](BANANA_QUEST.md) owns this slice, play command, source map
+and validation. Phone shipping is shelved; existing services, NPC experiments, dog
+and aquarium work are retained. This narrowly reopens encounter placement and
+its disposable tests; broader authored levels remain paused. Earlier scope and
+installed-build statements below are historical.
+
+Updated October 7, 2026. This private BepInEx prototype uses Streets of Rogue's native world/NPC systems to explore small interactions. Reusable **read-only world awareness and trustworthy evidence** now support bounded native food and hydrant interests. [PROJECT_RECORD.md](PROJECT_RECORD.md) records integration surprises and emerging scope; the handoff owns the next action.
 
 ## Start here
 
+**October 12 NPC tooling:** the user resumed after the quota pause; tooling and first autonomous pickup now pass the native suite (73 checks). Read [NPC_DESIRES_HANDOFF.md](NPC_DESIRES_HANDOFF.md) for current evidence and [NPC_DESIRES.md](NPC_DESIRES.md) for commands. This is a disabled-by-default, one-civilian experiment; level authoring remains paused.
+
+
+
+**Current scope — October 7:** all level-design and setup work is paused. Focus is now all NPC interactions, starting with existing self-preservation and territory rules. The [NPC interaction audit](NPC_INTERACTIONS_AUDIT.md) supersedes earlier next-action recommendations; existing implementation and evidence remain preserved.
+
 | Need | Document |
 |---|---|
+| First food interaction, native rules and automated proof | [FOOD_INTERACTION_PLAN.md](FOOD_INTERACTION_PLAN.md) |
+| Bounded hydrant detour, cosmetic marking and automated proof | [HYDRANT_INTERACTION_PLAN.md](HYDRANT_INTERACTION_PLAN.md) |
+| Roadmap to the first dog decision, bounded checks and user involvement | [WORLD_AWARENESS_TO_DOG_PLAN.md](WORLD_AWARENESS_TO_DOG_PLAN.md) |
 | Exact stopping state, installed versus prepared build, next action | [PAUSE_HANDOFF.md](PAUSE_HANDOFF.md) |
 | Milestones, resource budgets and 30 FPS acceptance | [WORLD_AWARENESS_PLAN.md](WORLD_AWARENESS_PLAN.md) |
 | Data contracts, native sources, scheduling and writer | [WORLD_AWARENESS_ARCHITECTURE.md](WORLD_AWARENESS_ARCHITECTURE.md) |
@@ -23,7 +56,9 @@ The handoff owns runtime identity; the requirements ledger owns verification sta
 
 Delivery/Services, the parked aquarium effect, a one-per-level dog proxy and bounded native-noise barking precede world awareness. The dog is a drawn visual over a native Courier actor. Following, dropped-burrito attention and release/wandering have user observations; a logged bark or NoiseReact activation alone does not establish a useful distraction.
 
-World awareness now provides an entity registry/spatial index, range queries, camera/geometry evidence, goal/path/door detail, live/paused inspection, bounded background capture and offline reports. Native census counts and selected visibility examples are recorded. The older stationary comparison passed numeric targets; the first completed busy sample found burst costs and hitches. We installed the tested narrower lifecycle capture and better quality reduction; one lighter populated busy Record retest is captured, and the ordinary comparison suite stopped after six valid trials. **This is validation work, not completed 30 FPS release acceptance.** Exact builds and next steps belong in the handoff.
+World awareness provides an entity registry/spatial index, range queries, camera/geometry evidence, goal/path/door detail, live/paused inspection, bounded background capture and offline reports. The earlier stationary comparison and pressure sample remain separately attributed. New native readiness slices and a complete controlled busy comparison pass on the development host. **Full 30 FPS release acceptance remains open**, including combat/hazard equivalence, allocations and other hardware. Exact builds and limits belong in the handoff.
+
+The October 6 readiness extensions now provide automatic sustained-window/crowded-detail/backpressure validation and controlled food/hydrant/door, API pause/resume and native scope-reload checks. These bounded slices pass; the nine-trial controlled busy comparison passes. The recovery policy was corrected so isolated within-budget outliers do not prevent natural restoration. See the [roadmap execution](WORLD_AWARENESS_TO_DOG_PLAN.md) for exact reports and limits. The user selected food. The first native eating/Follow slice now passes its automatic fixture; healthy dogs sniff and leave food, injured dogs eat one. World Awareness supplies read-only discovery, while fixture injury/setup stays separate. The next user boundary is subjective readability/usefulness in a short visible test (`make world-food`). Broad release matrices remain open.
 
 ## Native behavior and interpretation
 
@@ -48,6 +83,8 @@ Audit files: `.runtime/window-npc-members-native.txt`, `.runtime/window-npc-reac
 Useful reuse pattern: an incident carries a target identity/location, eligibility selects a responder, and native goals handle the response. Use this as a candidate for later object interactions and dog interest decisions. Quiet food/hydrant discovery still comes from world queries; a disturbance can arrive through an event. Preserve the distinction between noticing a location, investigating it and identifying a culprit. WindowHelper has window/building-specific rules, so reusing its exact noise type for arbitrary dog interests is not established. No new response behavior is implemented by this finding.
 
 ## Decisions to retain
+
+October 7: the user judged the live dog decent and chose **just hydrant interest**. The new bounded cosmetic marking slice and its automatic fixture are documented in [the hydrant plan](HYDRANT_INTERACTION_PLAN.md). Barking/NPC response changes, retrieval, repeated-food polish and general movement recovery were not selected. The normal visible playtest has no automatic cleanup; full native fixtures deliberately remove their owned dog and quit.
 
 - Prioritize interaction per NPC and reuse over more species or deep simulation. Dog food/hydrant interest is a follow-on to the world service; a Pet Store fixture is not built.
 - Cross-level pet persistence: **probably no**. Existing delivery waiting preserves native wandering by user choice.

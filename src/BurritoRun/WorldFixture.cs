@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace BurritoRun
@@ -8,6 +9,7 @@ namespace BurritoRun
     internal sealed class WorldFixture
     {
         internal Agent Actor { get; private set; }
+        internal bool OwnedActive => Actor != null && Actor.GetInstanceID() == ownedInstance && Actor.UID == ownedUid && WorldNative.Active(Actor);
         private int ownedInstance;
         private int ownedUid;
         private float nextMenuAction;
@@ -79,9 +81,10 @@ namespace BurritoRun
             return false;
         }
 
-        internal void EmitPressure(Agent player, Action<Noise, bool> observe)
+        internal void EmitPressure(Agent player, Action<Noise, bool> observe, int count = 64)
         {
-            for (int i = 0; i < 64; i++)
+            if (count < 1 || count > 64) throw new ArgumentOutOfRangeException(nameof(count));
+            for (int i = 0; i < count; i++)
             {
                 var noise = player.gc.spawnerMain.SpawnNoise(player.tr.position, 0, player, "Normal", player, true);
                 if (noise == null) throw new InvalidOperationException("Native pressure noise not spawned");
@@ -89,6 +92,66 @@ namespace BurritoRun
                 finally { noise.DestroyMe(); }
                 observe(noise, false);
             }
+        }
+
+        internal static Action SlowWriter(CaptureWorker writer)
+        {
+            // Release on the first observed real trigger; the timeout also bounds interrupted tests.
+            var release = new System.Threading.ManualResetEventSlim(false);
+            if (!writer.Enqueue(() => release.Wait(2000), 64, true))
+                throw new InvalidOperationException("Slow-writer fixture not enqueued");
+            return () => release.Set();
+        }
+
+        internal void Move(Agent player, Vector3 target)
+        {
+            if (!OwnedActive) throw new InvalidOperationException("Owned movement fixture was retired or reused");
+            Actor.agentInteractions.GoHere(Actor, player, target);
+        }
+
+        internal static Bullet Projectile(Agent source)
+        {
+            var bullet = source.gc.spawnerMain.SpawnBullet(source.tr.position, bulletStatus.Normal, source);
+            if (bullet == null) throw new InvalidOperationException("Native projectile fixture not spawned");
+            bullet.DestroyMe();
+            return bullet;
+        }
+
+        internal static Vector3 ObjectSpot(Agent player, List<PlayfieldObject> existing)
+        {
+            for (int ring = 2; ring <= 5; ring++)
+                for (int direction = 0; direction < 8; direction++)
+                {
+                    float angle = direction * Mathf.PI / 4;
+                    var spot = player.tr.position + new Vector3(Mathf.Cos(angle), Mathf.Sin(angle), 0) * ring;
+                    if (!player.gc.tileInfo.PossibleToWalk(player, spot) || !player.gc.tileInfo.SafeToWalk(player, spot) ||
+                        !player.movement.HasLOSPosition360(spot) || Crowded(player.gc, spot)) continue;
+                    bool nearby = false;
+                    foreach (var entity in existing) if (Vector2.Distance(entity.tr.position, spot) < 1.5f) nearby = true;
+                    if (!nearby) return spot;
+                }
+            throw new InvalidOperationException("No safe object fixture spot");
+        }
+
+        internal static PlayfieldObject Object(Agent player, string name, Vector3 position) =>
+            name == Names.Food ? (PlayfieldObject)player.gc.spawnerMain.SpawnItem(position, Names.Food) :
+            player.gc.spawnerMain.spawnObjectReal(position, (PlayfieldObject)null, name);
+
+        internal static void RemoveObject(PlayfieldObject entity, int uid)
+        {
+            if (entity != null && entity.UID == uid && WorldNative.Active(entity) && !(entity is ObjectReal obj && obj.destroyed))
+                entity.DestroyMe();
+        }
+
+        internal static void SetDoor(Door door, bool open, bool locked)
+        { door.open = open; door.locked = locked; }
+
+        internal static void Reload(GameController gc) => gc.levelTransition.ChangeLevel();
+        internal static void AcceptReload(GameController gc)
+        {
+            var selection = gc?.mainGUI?.characterSelectScript;
+            if (gc?.mainGUI?.characterSelect?.activeInHierarchy == true && selection?.selectedInvSlot?[0] != null && !selection.isChoiceAccepted())
+                selection.AcceptChoice(0);
         }
 
         internal void Remove()

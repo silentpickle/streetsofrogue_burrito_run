@@ -4,10 +4,14 @@
     <TargetFramework>net7.0</TargetFramework>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="../../src/BurritoRun/QuestPolicy.cs" Link="QuestPolicy.cs" />
+    <Compile Include="../../src/BurritoRun/QuestStartWindow.cs" Link="QuestStartWindow.cs" />
+    <Compile Include="../../src/BurritoRun/NpcDecision.cs" Link="NpcDecision.cs" />
     <Compile Include="../../src/BurritoRun/DeliveryRoute.cs" Link="DeliveryRoute.cs" />
     <Compile Include="../../src/BurritoRun/CustomerReputation.cs" Link="CustomerReputation.cs" />
     <Compile Include="../../src/BurritoRun/AquariumScatter.cs" Link="AquariumScatter.cs" />
     <Compile Include="../../src/BurritoRun/PetPolicy.cs" Link="PetPolicy.cs" />
+    <Compile Include="../../src/BurritoRun/PetHydrantPolicy.cs" Link="PetHydrantPolicy.cs" />
     <Compile Include="../../src/BurritoRun/PetBarkPolicy.cs" Link="PetBarkPolicy.cs" />
     <Compile Include="../../src/BurritoRun/PetLevelScope.cs" Link="PetLevelScope.cs" />
     <Compile Include="../../src/BurritoRun/TestPanelInput.cs" Link="TestPanelInput.cs" />

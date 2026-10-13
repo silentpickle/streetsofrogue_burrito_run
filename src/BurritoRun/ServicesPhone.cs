@@ -17,6 +17,7 @@ namespace BurritoRun
 
         internal void Tick()
         {
+            if (!plugin.ServicesAvailable) { if (IsOpen) Close(); return; }
             var player = GameController.gameController?.playerAgent;
             if (IsOpen && (customer != player || !plugin.Delivery.CanOrder(customer))) Close();
             if (Input.GetKeyDown(KeyCode.F2))
@@ -37,6 +38,7 @@ namespace BurritoRun
 
         internal void Open(Agent player)
         {
+            if (!plugin.ServicesAvailable) return;
             if (!plugin.Delivery.CanOrder(player)) return;
             player.mainGUI.HideEverything();
             customer = player;

@@ -7,6 +7,11 @@ namespace BurritoRun
     internal sealed class CourierDoorInteraction
     {
         private bool knocked;
+        /// <summary>
+        /// Remember the first native knock for this delivery.
+        /// Sharing this state with the optional knock prevents our flavor behavior from duplicating
+        /// an observed knock.
+        /// </summary>
         internal bool ObserveNativeKnock()
         {
             if (knocked) return false;
@@ -14,6 +19,11 @@ namespace BurritoRun
             return true;
         }
 
+        /// <summary>
+        /// Try one native knock at a nearby closed door belonging to the delivery destination.
+        /// The native call uses interactingAgent for attribution; restore its prior value and leave
+        /// opening or responses to the game.
+        /// </summary>
         internal void TryKnockAtDestination(Agent courier, Vector3 destination)
         {
             if (knocked || courier == null || courier.gc.objectRealList == null) return;

@@ -37,6 +37,11 @@ namespace BurritoRun
         internal WorldJournal(CaptureWorker worker, string directory, string session, string build,
             long segmentLimit = 8 * 1024 * 1024, int retain = 16)
         { this.worker = worker; this.directory = directory; this.session = session; this.build = build; this.segmentLimit = segmentLimit; this.retain = retain; }
+        /// <summary>
+        /// Wrap detached data in a sequenced session record and queue it for background writing.
+        /// Sequence gaps and rejected records remain visible so a reader can detect incomplete
+        /// evidence.
+        /// </summary>
         internal bool Write(string kind, int level, float gameTime, double wallTime, object data, bool essential = false)
         {
             long seq = Interlocked.Increment(ref sequence);
@@ -48,6 +53,12 @@ namespace BurritoRun
             if (worker.Enqueue(() => WriteCore(record), size, essential)) return true;
             Interlocked.Increment(ref dropped); return false;
         }
+        /// <summary>
+        /// Serialize one record, rotate bounded disk segments and track write failures on the
+        /// worker thread.
+        /// Disk retention is finite; segment retirement and dropped records must be reported rather
+        /// than hidden.
+        /// </summary>
         private void WriteCore(Dictionary<string, object> record)
         {
             if (failure != null) { Interlocked.Increment(ref dropped); return; }
@@ -76,6 +87,10 @@ namespace BurritoRun
             }
             catch (Exception error) { failure = error.GetType().Name + ": " + error.Message; Interlocked.Increment(ref dropped); }
         }
+        /// <summary>
+        /// Write the stream's retained files, losses, limits and closure state to its manifest.
+        /// Readers need the recording's coverage and terminal state before trusting it as complete.
+        /// </summary>
         private void Manifest(bool closed)
         {
             File.WriteAllText(Path.Combine(directory, "world-" + session + "-manifest.json"),
@@ -96,6 +111,11 @@ namespace BurritoRun
                     failure
                 }, Formatting.Indented));
         }
+        /// <summary>
+        /// Queue final stream disposal and a closed manifest after previously queued writes.
+        /// Closure shares the ordered writer; merely requesting it is not proof that it has reached
+        /// disk.
+        /// </summary>
         internal void Close()
         {
             if (!worker.Enqueue(() =>

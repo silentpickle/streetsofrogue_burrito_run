@@ -9,6 +9,11 @@ namespace BurritoRun
         private static readonly float[] SampleOffsets = { 0.64f, 1.28f, 1.92f };
         private static readonly float[] MeetingOffsets = { 1.92f, 2.56f, 1.28f };
 
+        /// <summary>
+        /// Try to select a safe exterior handoff point belonging to an indoor delivery address.
+        /// The nearest door can be internal or belong elsewhere; inspect building sides and clear
+        /// approach before routing to it.
+        /// </summary>
         internal static bool TryFindEntrance(GameController gc, Vector3 address, out Vector3 meetingPoint, out Door entrance)
         {
             meetingPoint = address;

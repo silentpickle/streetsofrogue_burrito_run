@@ -8,7 +8,7 @@ namespace BurritoRun
     // A bounded orchestration loop, not a simulation or behavioral feature.
     internal sealed class WorldHarness
     {
-        private enum Phase { Waiting, Discover, Retire, Performance, Pressure, Recovery, PressureRetire, Finished }
+        private enum Phase { Waiting, Discover, Retire, Performance, Pressure, Recovery, PressureRetire, Readiness, Finished }
         private readonly Plugin plugin;
         private readonly WorldFixture fixture = new WorldFixture();
         private Phase phase;
@@ -31,6 +31,14 @@ namespace BurritoRun
         private float nextPressureSample;
         private bool detailRecorded;
         private bool pressureReduced;
+        private WorldReadiness readiness;
+        private PetFoodHarness foodHarness;
+        private NpcProbeHarness npcHarness;
+        private NpcDesireHarness desireHarness;
+        private QuestHarness questHarness;
+        private BananaEncounter startupEncounter;
+        private PetHydrantHarness hydrantHarness;
+        internal string Extension { get; }
         internal bool Pressure { get; }
         internal bool Performance { get; }
         internal bool Enabled { get; }
@@ -41,6 +49,8 @@ namespace BurritoRun
             Enabled = plugin.TestMode && Array.IndexOf(Environment.GetCommandLineArgs(), "--world-harness") >= 0;
             Performance = Enabled && Array.IndexOf(Environment.GetCommandLineArgs(), "--world-performance") >= 0;
             Pressure = Enabled && Array.IndexOf(Environment.GetCommandLineArgs(), "--world-pressure") >= 0;
+            foreach (var mode in new[] { "advanced", "busy", "native", "food", "hydrant", "npc-probe", "npc-desires", "banana-quest" })
+                if (Enabled && Array.IndexOf(Environment.GetCommandLineArgs(), "--world-" + mode) >= 0) Extension = mode;
             if (!Enabled) return;
             deadline = Time.realtimeSinceStartup + 120;
             // Running native menu/start mutations is allowed only in this command's disposable profile.
@@ -49,9 +59,10 @@ namespace BurritoRun
             if (string.IsNullOrEmpty(root) || !Path.IsPathRooted(root) ||
                 profile != Path.Combine(root, "profile") || !File.Exists(Path.Combine(root, "harness-run.json")))
             { Finish("SKIPPED", "dedicated-harness-profile-required"); return; }
+            if (Extension == "banana-quest") plugin.BananaMode = true;
             WorldFixture.ConfigureCollection();
             plugin.Awareness.HarnessRecord("start", TraceWorld.Values("fixtureRevision", 1, "repeats", 2,
-                "profile", profile, "performance", Performance, "pressure", Pressure,
+                "profile", profile, "performance", Performance, "pressure", Pressure, "extension", Extension,
                 "setup", "one native Courier; safe nearby tile; forced DoNothing; native removal",
                 "scope", "actor discovery/query/read-invariance/retirement; not full WA or dog acceptance"));
         }
@@ -67,6 +78,41 @@ namespace BurritoRun
             try
             {
                 var gc = GameController.gameController;
+                if (Extension == "banana-quest" && phase != Phase.Readiness && startupEncounter == null && plugin.Quests.Encounter != null)
+                {
+                    startupEncounter = plugin.Quests.Encounter;
+                    RecordQuestStartup("offered", gc);
+                    if (!QuestService.Ready(gc?.playerAgent) || gc.sessionDataBig.curLevel <= 0 || gc.quests.numQuests <= 0)
+                    { Finish("FAIL", "favor-started-before-playable-floor"); return; }
+                }
+                if (Extension == "banana-quest" && phase != Phase.Readiness && startupEncounter != null &&
+                    (plugin.Quests.Encounter != startupEncounter || !startupEncounter.SameLevel || plugin.Quests.Policy.State != QuestState.Offered))
+                { Finish("FAIL", "startup-favor-expired-before-cases"); return; }
+                if (phase == Phase.Readiness)
+                {
+                    if (questHarness != null)
+                    { questHarness.Tick(); if (questHarness.Status != null) Finish(questHarness.Status, questHarness.Reason); }
+                    else if (desireHarness != null)
+                    { desireHarness.Tick(); if (desireHarness.Status != null) Finish(desireHarness.Status, desireHarness.Reason); }
+                    else if (npcHarness != null)
+                    { npcHarness.Tick(); if (npcHarness.Status != null) Finish(npcHarness.Status, npcHarness.Reason); }
+                    else if (hydrantHarness != null)
+                    {
+                        hydrantHarness.Tick();
+                        if (hydrantHarness.Status != null) Finish(hydrantHarness.Status, hydrantHarness.Reason);
+                    }
+                    else if (foodHarness != null)
+                    {
+                        foodHarness.Tick();
+                        if (foodHarness.Status != null) Finish(foodHarness.Status, foodHarness.Reason);
+                    }
+                    else
+                    {
+                        readiness.Tick();
+                        if (readiness.Status != null) Finish(readiness.Status, readiness.Reason);
+                    }
+                    return;
+                }
                 if (Time.realtimeSinceStartup >= deadline)
                 { Finish(phase == Phase.Waiting ? "SKIPPED" : "FAIL", "timeout-" + phase); return; }
                 if (phase == Phase.Waiting)
@@ -93,7 +139,7 @@ namespace BurritoRun
                 { Finish("INTERRUPTED", "paused"); return; }
                 if (phase == Phase.Discover)
                 {
-                    if (fixture.Actor == null || fixture.Actor.dead || !WorldNative.Active(fixture.Actor))
+                    if (!fixture.OwnedActive || fixture.Actor.dead)
                     { Finish("INTERRUPTED", "fixture-actor-lost"); return; }
                     if (Time.realtimeSinceStartup < settleUntil) return;
                     var entity = plugin.Awareness.HarnessEntity(fixture.Actor);
@@ -121,6 +167,21 @@ namespace BurritoRun
                         "nativeActive", active, "indexedActive", old != null && old.Active && !old.Destroyed,
                         "oldSnapshot", old != null ? WorldNative.Detach(old) : null));
                     if (repeat < 2) Spawn();
+                    else if (Extension != null)
+                    {
+                        if (Extension == "banana-quest")
+                        {
+                            RecordQuestStartup("settled", gc);
+                            if (startupEncounter == null) { Finish("FAIL", "normal-auto-start-missing"); return; }
+                            questHarness = new QuestHarness(plugin, player);
+                        }
+                        else if (Extension == "npc-desires") desireHarness = new NpcDesireHarness(plugin, player);
+                        else if (Extension == "npc-probe") npcHarness = new NpcProbeHarness(plugin, player);
+                        else if (Extension == "food") foodHarness = new PetFoodHarness(plugin, player);
+                        else if (Extension == "hydrant") hydrantHarness = new PetHydrantHarness(plugin, player);
+                        else readiness = new WorldReadiness(plugin, Extension, player);
+                        phase = Phase.Readiness;
+                    }
                     else if (Pressure)
                     {
                         if (plugin.Awareness.Quality.Level != 0 || !plugin.Awareness.HarnessCaptureClean)
@@ -171,6 +232,17 @@ namespace BurritoRun
             { plugin.Error(error); Finish("INCONCLUSIVE", error.GetType().Name + ": " + error.Message); }
         }
 
+        private void RecordQuestStartup(string phaseName, GameController gc)
+        {
+            plugin.Awareness.HarnessRecord("quest-startup", TraceWorld.Values("phase", phaseName,
+                "state", plugin.Quests.Policy?.State.ToString(), "sameEncounter", startupEncounter != null &&
+                    startupEncounter == plugin.Quests.Encounter && startupEncounter.SameLevel,
+                "ready", QuestService.Ready(gc?.playerAgent), "floor", gc?.floorNameNum,
+                "level", gc?.sessionDataBig?.curLevel, "nativeQuestCount", gc?.quests?.numQuests,
+                "characterSelect", QuestService.SelectingCharacter(gc), "openedCharacterSelect", gc?.mainGUI?.openedCharacterSelect,
+                "initialCharacterSelect", gc?.mainGUI?.doingInitialCharacterSelect, "onMenu", gc?.menuGUI?.onMenu));
+        }
+
         private void TickPressure()
         {
             pressureReduced |= plugin.Awareness.Quality.Level > 0;
@@ -212,7 +284,7 @@ namespace BurritoRun
             }
             else if (phase == Phase.Recovery)
             {
-                if (fixture.Actor == null || fixture.Actor.dead || !WorldNative.Active(fixture.Actor))
+                if (!fixture.OwnedActive || fixture.Actor.dead)
                 { Finish("INTERRUPTED", "pressure-witness-lost"); return; }
                 var detailed = plugin.Awareness.HarnessEntity(fixture.Actor);
                 if (!detailRecorded && detailed != null && detailed.Collection != null &&
@@ -268,9 +340,11 @@ namespace BurritoRun
             if (phase == Phase.Finished) return;
             try { fixture.Remove(); }
             catch (Exception error) { status = "INCONCLUSIVE"; reason += "; cleanup: " + error.Message; }
+            try { questHarness?.Close(); desireHarness?.Close(); npcHarness?.Close(); readiness?.Close(); foodHarness?.Close(); hydrantHarness?.Close(); }
+            catch (Exception error) { status = "INCONCLUSIVE"; reason += "; readiness cleanup: " + error.Message; }
             var gc = GameController.gameController;
             plugin.Awareness.HarnessRecord("ended", TraceWorld.Values("status", status, "reason", reason, "repeatsStarted", repeat,
-                "performance", Performance, "pressure", Pressure, "trialsStarted", trial,
+                "performance", Performance, "pressure", Pressure, "extension", Extension, "trialsStarted", trial,
                 "clock", TraceWorld.Values("timeScale", Time.timeScale, "mainScale", gc?.mainTimeScale,
                     "secondaryScale", gc?.secondaryTimeScale, "freezeFrame", gc?.freezeFrame,
                     "nativeFreeze", plugin.Awareness.HarnessNativeFreeze, "focused", Application.isFocused),

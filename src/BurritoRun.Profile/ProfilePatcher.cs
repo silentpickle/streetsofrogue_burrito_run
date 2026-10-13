@@ -12,6 +12,12 @@ namespace BurritoRun.Profile
     {
         public static IEnumerable<string> TargetDLLs => new[] { "Assembly-CSharp.dll" };
 
+        /// <summary>
+        /// Redirect native persistent-save-path calls to the explicit prototype profile in the
+        /// loaded assembly.
+        /// Patching in memory separates saves without rewriting the installed game DLL; missing
+        /// paths or patch sites fail closed.
+        /// </summary>
         public static void Patch(AssemblyDefinition assembly)
         {
             string profile = Environment.GetEnvironmentVariable("BURRITO_PROFILE_PATH");

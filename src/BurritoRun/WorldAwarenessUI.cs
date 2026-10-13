@@ -180,6 +180,7 @@ namespace BurritoRun
             }
             GUILayout.EndScrollView();
             detailScroll = GUILayout.BeginScrollView(detailScroll, GUILayout.Height(Math.Max(1, height - 272)));
+            plugin.NpcDesires.DrawInspection();
             var selected = Index.Get(TargetKey);
             if (selected != null)
             {

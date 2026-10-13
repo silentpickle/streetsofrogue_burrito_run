@@ -25,6 +25,11 @@ namespace BurritoRun
         internal TraceStorage(string path, long limit = DefaultLimit, CaptureWorker worker = null)
         { this.path = path; this.limit = limit; this.worker = worker; }
 
+        /// <summary>
+        /// Accept a detached trace record and queue it when a shared writer is available.
+        /// Returning false and counting drops keeps capture failure separate from the gameplay
+        /// event being recorded.
+        /// </summary>
         internal bool Write(Dictionary<string, object> record, bool terminal = false)
         {
             if (Failed || path == null) { Interlocked.Increment(ref dropped); return false; }
@@ -33,6 +38,12 @@ namespace BurritoRun
             Interlocked.Increment(ref dropped); return false;
         }
 
+        /// <summary>
+        /// Write one bounded trace record, reserving space for terminal evidence and recording
+        /// earlier losses.
+        /// A terminal PASS becomes inconclusive after dropped records so partial evidence cannot
+        /// certify an outcome.
+        /// </summary>
         private bool WriteCore(Dictionary<string, object> record, bool terminal)
         {
             try
@@ -77,6 +88,11 @@ namespace BurritoRun
         internal long Evicted { get; private set; }
         internal TraceHistory(int capacity, long byteCapacity = long.MaxValue)
         { this.capacity = capacity; this.byteCapacity = byteCapacity; }
+        /// <summary>
+        /// Retain recent history within both entry-count and byte limits.
+        /// One large incident must not defeat the memory bound; evictions remain counted as lost
+        /// history.
+        /// </summary>
         internal void Add(T value, long bytes = 1)
         {
             if (bytes < 0 || bytes > byteCapacity || capacity < 1) { Evicted++; return; }

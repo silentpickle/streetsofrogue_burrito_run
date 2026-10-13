@@ -37,6 +37,12 @@ namespace BurritoRun
             thread = new Thread(Run) { IsBackground = true, Name = "BurritoRun capture writer" };
             thread.Start();
         }
+        /// <summary>
+        /// Queue detached work without waiting for disk, returning false when capacity or shutdown
+        /// prevents it.
+        /// Reserved space favors essential records while explicit drop accounting prevents false
+        /// completeness claims.
+        /// </summary>
         internal bool Enqueue(Action action, long bytes, bool essential = false)
         {
             lock (gate)
@@ -50,6 +56,12 @@ namespace BurritoRun
                 Monitor.PulseAll(gate); return true;
             }
         }
+        /// <summary>
+        /// Execute queued work in order on the single writer thread and periodically flush idle
+        /// buffers.
+        /// Keeping serialization and disk access off the game thread reduces capture-induced frame
+        /// stalls.
+        /// </summary>
         private void Run()
         {
             while (true)
@@ -83,6 +95,11 @@ namespace BurritoRun
             FlushStreams(true);
         }
         // Worker-thread only. Legacy text remains byte-for-byte ordered while writes are buffered.
+        /// <summary>
+        /// Append legacy text on the writer thread while preserving its original order.
+        /// Buffered I/O improves capture cost without changing the text format consumed by existing
+        /// readers.
+        /// </summary>
         internal void AppendBuffered(string path, string text, bool flush = false)
         {
             if (Thread.CurrentThread != thread) throw new InvalidOperationException("Writer thread required");
@@ -102,6 +119,11 @@ namespace BurritoRun
             lastFlush = Stopwatch.GetTimestamp();
         }
         // Tests/shutdown only. Never wait for disk during live gameplay.
+        /// <summary>
+        /// Wait up to a bounded deadline for queued work to finish during tests or shutdown.
+        /// Live gameplay must not block on storage; a timeout must remain distinguishable from a
+        /// successful drain.
+        /// </summary>
         internal bool Drain(int milliseconds = 5000)
         {
             var timer = Stopwatch.StartNew();
@@ -116,10 +138,21 @@ namespace BurritoRun
                 return true;
             }
         }
+        /// <summary>
+        /// Stop accepting work, wake the writer and wait briefly for it to finish.
+        /// Shutdown has a time bound, so disposal alone cannot guarantee every queued record
+        /// reached disk.
+        /// </summary>
         public void Dispose()
         { lock (gate) { stopping = true; Monitor.PulseAll(gate); } thread.Join(1500); }
 
         // Conservative detached payload accounting. Unknown reference types are rejected.
+        /// <summary>
+        /// Estimate the retained size of a detached payload and reject unsupported or deeply nested
+        /// values.
+        /// Queue limits must account for payload memory, and arbitrary reference objects could
+        /// carry unsafe live game state.
+        /// </summary>
         internal static long Measure(object value, long limit = 4 * 1024 * 1024, int depth = 0)
         {
             if (depth > 32) return limit + 1;

@@ -1,0 +1,51 @@
+{
+  "Input": {
+    "PolicyVersion": 2,
+    "PreferBanana": true,
+    "Emergency": false,
+    "CurrentTarget": null,
+    "Inhibition": null,
+    "Candidates": [
+      {
+        "Key": "3:-56094:716:403",
+        "Item": "Fud",
+        "Distance": 2.0,
+        "Age": 0.03333282470703125,
+        "Rejection": null
+      },
+      {
+        "Key": "3:-56184:717:404",
+        "Item": "Banana",
+        "Distance": 2.0,
+        "Age": 0.03333282470703125,
+        "Rejection": null
+      }
+    ],
+    "NativeObligation": null
+  },
+  "Output": {
+    "Intention": "pickup",
+    "Target": "3:-56184:717:404",
+    "Reason": "highest-positive-score",
+    "Candidates": [
+      {
+        "Key": "3:-56094:716:403",
+        "Item": "Fud",
+        "Age": 0.03333282470703125,
+        "Preference": 5.0,
+        "TravelCost": 2.0,
+        "Score": 3.0,
+        "Rejection": null
+      },
+      {
+        "Key": "3:-56184:717:404",
+        "Item": "Banana",
+        "Age": 0.03333282470703125,
+        "Preference": 8.0,
+        "TravelCost": 2.0,
+        "Score": 6.0,
+        "Rejection": null
+      }
+    ]
+  }
+}

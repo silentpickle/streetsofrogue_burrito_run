@@ -1,0 +1,33 @@
+# Dog hydrant interest — October 7, 2026
+
+The user judged the dog decent and selected **just hydrant interest**. Barking, NPC reactions, food policy and general follow recovery remain unchanged.
+
+## Behavior
+
+Ordinary World Awareness discovers a fresh, intact `FireHydrant` within four units and native geometry LOS. Read-only resolution checks the exact activation; nearby safe native-walkable approach candidates are considered. The dog sends one native GoHere command, approaches an adjacent spot, briefly raises a leg with small cosmetic droplets, then restores native Follow. No hydrant interaction, damage, switched state, native water, slippery tile, noise, crime or relationship write is performed by this behavior.
+
+Approach commands use ground-plane Z=0 rather than the object's rendering depth. Arrival is within 1.2 units of the actual hydrant; the pose aborts if separation exceeds 1.6. Native pathing can settle on a different face of the solid collider, so arrival does not require the exact suggested approach point.
+
+Native following is suspended during the detour and restored afterward. The marking pause uses native DoNothing with a temporary idle anchor at the dog's current position, restored at the end. Native GoalIdle otherwise adds a path back to the actor's starting position. No transform teleport, physics freeze or world pause is used. The harness records actual assigned/final positions and native subgoals with detached numeric values.
+
+Interest stops after eight game seconds without arrival, loss/ineligibility/blocked view, combat, owner separation over six units, release, actor retirement or level change. The pose lasts 1.25 game seconds. Each activation is visited at most once per level, including failed attempts; a 45-game-second cooldown separates interests. Memory is capped at 32 activations. Paused inspector/phone input suspends behavior through the existing service guard. Food has priority when deciding a new detour. Existing native combat behavior remains native.
+
+## Validation and visible setup
+
+`make world-hydrant` creates a disposable profile, runs existing read-only actor gates, then runs an owned dog/hydrant fixture. Mutations belong in `PetHydrantFixture`; awareness is never seeded. The independent report requires actual ordinary census identity, measured approach/arrival, visible pose signal/duration, actual native GoalFollow, preserved player inventory/health and dog health, unchanged native hydrant state/position, full cooldown and repeat suppression, target removal, forced unfinished approach timeout, release, and actual owned cleanup/index retirement. Automatic validation destroys its test dog and quits at completion, as other harness modes do. It is separate from a visible playtest.
+
+The normal quick-test panel adds **Place one test hydrant** for a following dog. This bounded test-only mutation delegates to the fixture helper and allows one placement per level. Ordinary level hydrants also work. A normal playable launch has no automatic cleanup/exit; the user can assess whether the short marking pose reads clearly. Test logs retain exact build/session/outcome.
+
+## Evidence
+
+Native assembly inspection is saved under `.runtime/hydrant-native-audit/`: FireHydrant members/SetVars/Interact and AgentInteractions.GoHere. The native Interact opens object buttons; the separate break/spray functions are intentionally not used. Code inspection establishes API paths; the native run results below establish the bounded runtime outcome. The broader findings and emerging scope are tracked in [PROJECT_RECORD.md](PROJECT_RECORD.md).
+
+Failed pilots remain preserved: `.runtime/world-harness/20261007-231147-2744/` (`8a1e78ab`, build `0.6.0+20261008-051146`) and `.runtime/world-harness/20261007-231356-3564/` (`8e5c238e`, build `0.6.0+20261008-051355`). Both timed out during the first approach, returned to native Follow and failed the expected marking case. The first passed object rendering depth into GoHere; after grounding the destination, the second settled within 0.918 units of the hydrant but outside the strict 0.45-unit destination threshold. These led to the ground-plane and actual-object arrival corrections; they are not passing evidence.
+
+Further pilots: `20261007-231619-4539` (`2ba8bcf3`, build `0.6.0+20261008-051618`) still timed out with native following attached. `20261007-231852-5517` (`f0e1bd31`, build `0.6.0+20261008-051851`) interrupted after its new diagnostic passed a raw Vector3 to the detached writer; one record was rejected. Diagnostics now convert it to numeric arrays on the main thread. `20261007-232019-6092` (`d1717e98`, build `0.6.0+20261008-052018`) reached a real marking pose but aborted after 0.467 seconds as GoalIdle/GoalPathTo returned the dog toward its starting position. Read-only GoalIdle.Activate inspection confirmed that native rule, leading to the temporary anchor/restoration fix. All remain non-passing evidence with their original reports and binaries.
+
+Final native run **PASS: 67 gates**, `.runtime/world-harness/20261007-232321-7312/report.md`, session `238d7320`, build `0.6.0+20261008-052320`, SHA256 `89f90828578061f48c3f14229123c8372dd6ebbe2e00ed9344e75534ed798292`. The marking pose lasted 1.265976 game seconds, ended 0.615 units from the intact hydrant and restored the original idle anchor. Mark/removal/timeout returned to actual GoalFollow; release ended in GoalWanderFar. All three full cooldowns, once-per-activation suppression, unchanged player inventory/health and dog health, unchanged native hydrant state/position and exact cleanup/index retirement pass. Closed 2,154-record / 6,744,778-byte capture, no drops/rotation/errors or observed engine exception. Installed DLL matches the preserved receipt. Build/analyzers/format pass with zero warnings/errors; 255 C# assertions and 110 Python report tests pass.
+
+This proves the bounded fixture on this Mac. It does not establish new NPC reactions, useful barking, broad combat/hazard acceptance, every interruption timing or subjective readability. Food's prior 66-gate native capture remains separately attributed to its earlier binary; its behavior source was not expanded here.
+
+Normal visible playtest launched with the validated installed DLL: `74a9f300`, `.runtime/logs/game-20261007-232752-8650.log`. At handoff it remains at the main menu: UI automation could not advance the menu and the Dock focus call timed out. The user needs single-player Quick Start, F6 and Place one test hydrant to view the ordinary encounter. No dog/pose is claimed in this session yet. Physical button input and subjective marking readability remain unverified; the controlled native fixture passed.

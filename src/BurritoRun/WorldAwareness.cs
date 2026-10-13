@@ -102,6 +102,12 @@ namespace BurritoRun
                 "losPerWindow", 32, "historySeconds", 20, "collections", WorldNative.Collections,
                 "frameTarget", 30, "hardwareValidation", "development-host-only", "splitScreen", "prepared-not-live-verified"), true);
         }
+        /// <summary>
+        /// Account for the previous frame and feed valid timing samples into benchmarks and quality
+        /// control.
+        /// Native freeze frames remain measured; real pauses, world changes and capture loss
+        /// invalidate trials.
+        /// </summary>
         internal void BeginFrame()
         {
             var accountingTimer = Stopwatch.StartNew();
@@ -127,6 +133,12 @@ namespace BurritoRun
             gc.mainTimeScale, gc.secondaryTimeScale, gc.freezeFrame, gc.freezeFramesDisabled, gc.justEndedFreezeFrame,
             DetailOpen || plugin.Phone.IsOpen || gc.screenshotMode);
         internal void AddWork(double milliseconds) => frameWorkMs += milliseconds;
+        /// <summary>
+        /// Advance the rolling census, selected detail, perception checks and pending exports on
+        /// the main thread.
+        /// Cooperative budgets keep world inspection bounded; a rolling sample is never an atomic
+        /// view of the whole level.
+        /// </summary>
         internal void Tick()
         {
             if (closed || !plugin.TestMode) return;
@@ -197,6 +209,11 @@ namespace BurritoRun
         }
         private static bool Ready(GameController gc) => gc != null && gc.loadComplete && !gc.returningToMainMenu &&
             !gc.levelTransitioning && gc.levelType != "HomeBase" && gc.levelType != "Attract";
+        /// <summary>
+        /// Clear observations and pending exports when their native world is no longer valid.
+        /// A familiar UID or Unity instance in a new level must not inherit the old level's
+        /// identity or history.
+        /// </summary>
         private void ResetScope(string reason)
         {
             if (scopeController != 0) Write("scope-ended", TraceWorld.Values("reason", reason), true);
@@ -207,6 +224,11 @@ namespace BurritoRun
             pendingChecks = exportRemaining = 0; incidentCursor = 0; incidentFrames = Array.Empty<Dictionary<string, object>>(); counts.Clear();
             if (DetailOpen) CloseDetail();
         }
+        /// <summary>
+        /// Read one collection step and reconcile absent entities when a census finishes.
+        /// Spreading the census across frames avoids an expensive full-world scan during one
+        /// gameplay frame.
+        /// </summary>
         private void ScanOne(GameController gc)
         {
             if (collection >= WorldNative.Collections.Length)
@@ -230,6 +252,12 @@ namespace BurritoRun
             if (entity == null) return;
             Upsert(entity, name);
         }
+        /// <summary>
+        /// Refresh an observed entity, assigning a new activation identity when native reuse is
+        /// detected.
+        /// Pooled objects can reuse instances or IDs, so consumers need more than a native UID to
+        /// identify a target.
+        /// </summary>
         private Entry Upsert(Component entity, string source, bool lifecycleCore = false)
         {
             int instance = entity.GetInstanceID(), id = WorldNative.NativeId(entity);
@@ -260,6 +288,12 @@ namespace BurritoRun
             frameWorkMs += cost; hookMs += cost;
             hookMaxMs = Math.Max(hookMaxMs, cost); if (cost > 1) hookOverBudget++;
         }
+        /// <summary>
+        /// Record native creation or retirement requests with immediate identity and bounded
+        /// metadata.
+        /// Heavy detail waits for the census, and a retirement request alone does not prove
+        /// deactivation.
+        /// </summary>
         internal void Lifecycle(Component entity, bool birth, string method, double lookupMs = 0)
         {
             if (!LifecycleEnabled || entity == null) { if (lookupMs > 0) AddHookWork(lookupMs); return; }
@@ -312,6 +346,22 @@ namespace BurritoRun
             var captured = Index.Get(key);
             return captured != null && WorldNative.NativeId(entity) == captured.NativeId ? entity : null;
         }
+        // Read-only consumer boundary. Reject retired scopes and recycled native activations.
+        /// <summary>
+        /// Resolve a sampled key only while its exact activation is live in the current ready
+        /// world.
+        /// Consumers must cross this boundary before acting on observations that may already be
+        /// stale.
+        /// </summary>
+        internal Component ResolveLive(string key)
+        {
+            if (Mode == AwarenessMode.Off || !Ready(GameController.gameController)) return null;
+            var captured = key != null ? Index.Get(key) : null;
+            var native = Resolve(key);
+            return captured != null && captured.Level == level && captured.Active && !captured.Destroyed &&
+                native != null && WorldNative.Active(native) &&
+                entries.TryGetValue(native.GetInstanceID(), out var entry) && entry.Key == key ? native : null;
+        }
         private void EnsureObserver(GameController gc)
         {
             if (Resolve(ObserverKey) is Agent) return;
@@ -319,9 +369,19 @@ namespace BurritoRun
             if (preferred == null) return;
             if (entries.TryGetValue(preferred.GetInstanceID(), out var entry)) ObserverKey = entry.Key;
         }
+        /// <summary>
+        /// Choose the actor that anchors queries and discard perception from the previous observer.
+        /// Line of sight and distance belong to a particular observer; reusing another actor's
+        /// evidence would mislead.
+        /// </summary>
         internal void SelectObserver(string key)
         { if (!(Resolve(key) is Agent)) return; ObserverKey = key; perception.Clear(); nextDetail = 0; Query.Offset = 0; }
         internal void SelectTarget(string key) { TargetKey = key; nextDetail = 0; }
+        /// <summary>
+        /// Refresh the query, selected perception, navigation and a bounded nearby snapshot.
+        /// Observation times and coverage travel with the data so the UI and decisions can
+        /// distinguish samples from current truth.
+        /// </summary>
         private void RefreshDetails(GameController gc)
         {
             var observer = Resolve(ObserverKey) as Agent;
@@ -385,6 +445,11 @@ namespace BurritoRun
                 "checked", Results.CandidatesChecked, "generation", generation, "complete", complete,
                 "coverage", Results.Coverage, "entities", matches);
         }
+        /// <summary>
+        /// Apply recording-mode rules before queuing a detached journal event.
+        /// Explicit incidents and session metadata remain available even when continuous recording
+        /// is disabled.
+        /// </summary>
         private void Write(string kind, object data, bool essential = false)
         {
             bool metadata = kind == "session" || kind == "session-ended" || kind == "performance" || kind == "mode" ||
@@ -393,6 +458,11 @@ namespace BurritoRun
             if (Mode == AwarenessMode.Record || metadata || explicitCapture)
                 journal.Write(kind, level, Time.time, Time.realtimeSinceStartup, data, essential);
         }
+        /// <summary>
+        /// Queue the retained history and a paged world snapshot around a surprising event.
+        /// Splitting the export into bounded records avoids serializing the whole incident during
+        /// one gameplay frame.
+        /// </summary>
         internal void Incident(string reason)
         {
             if (!plugin.TestMode) return;
@@ -405,6 +475,11 @@ namespace BurritoRun
             incidentFrames = history.Snapshot(); incidentCursor = 0;
             exportRemaining = Index.Count; exportOffset = 0;
         }
+        /// <summary>
+        /// Export the next bounded page of the sampled world index.
+        /// Each page retains its rolling-snapshot qualification because the world can change
+        /// between pages.
+        /// </summary>
         private void ExportPage()
         {
             var result = Index.Query(new WorldQuery
@@ -421,6 +496,11 @@ namespace BurritoRun
             exportOffset += result.Entities.Length; exportRemaining = result.TotalMatched - exportOffset;
             if (result.Entities.Length == 0) exportRemaining = 0;
         }
+        /// <summary>
+        /// Change observation mode and reset the measurements associated with the old mode.
+        /// Mixing costs or a running trial across mode changes would produce misleading
+        /// comparisons.
+        /// </summary>
         internal void SetMode(AwarenessMode mode)
         {
             SaveTrial(benchmark.Cancel(Time.realtimeSinceStartup, "mode-changed"));
@@ -431,12 +511,22 @@ namespace BurritoRun
             Mode = mode; if (mode == AwarenessMode.Off && DetailOpen) CloseDetail();
             Write("mode", TraceWorld.Values("mode", mode.ToString()), true); nextScan = 0; nextDetail = 0;
         }
+        /// <summary>
+        /// Start the sequence of labeled benchmark modes for one scenario.
+        /// Comparable trials need a declared scenario and consistent mode ordering, not unrelated
+        /// frame-rate snapshots.
+        /// </summary>
         internal void StartBenchmarkSuite(string scenario)
         {
             if (benchmark.Running || !Ready(GameController.gameController)) return;
             suiteScenario = scenario; suiteIndex = 0;
             StartBenchmark(scenario, AwarenessMode.Off);
         }
+        /// <summary>
+        /// Start one measured trial and remember its world, error and loss baselines.
+        /// Later changes to those baselines can invalidate the trial rather than silently yielding
+        /// a passing result.
+        /// </summary>
         internal void StartBenchmark(string scenario, AwarenessMode mode)
         {
             if (!Ready(GameController.gameController)) return;
@@ -480,6 +570,11 @@ namespace BurritoRun
         }
         private static double Percentile(List<double> values, double fraction)
         { if (values.Count == 0) return 0; var sorted = values.ToArray(); Array.Sort(sorted); return sorted[(int)((sorted.Length - 1) * fraction)]; }
+        /// <summary>
+        /// Periodically publish measured costs, queues, quality and frame-tail statistics.
+        /// Recording diagnostic overhead and loss alongside timings makes performance claims
+        /// auditable.
+        /// </summary>
         private void Stats()
         {
             if (Time.realtimeSinceStartup < nextStats) return;
@@ -511,6 +606,11 @@ namespace BurritoRun
             scanMs = queryMs = detailMs = overlayMs = hookMs = 0;
             hookMaxMs = 0; hookOverBudget = deferredLifecycleDetails = 0;
         }
+        /// <summary>
+        /// Cancel unfinished measurement and queue the session end and journal closure.
+        /// Readers need explicit shutdown evidence to distinguish a completed stream from an abrupt
+        /// exit.
+        /// </summary>
         internal void Close()
         {
             if (closed) return; SaveTrial(benchmark.Cancel(Time.realtimeSinceStartup, "shutdown")); closed = true;

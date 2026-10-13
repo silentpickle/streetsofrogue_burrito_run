@@ -41,6 +41,8 @@ echo 'Burrito Run: launching with a separate prototype save profile.'
 echo "Session log: $log"
 if [[ " $* " == *' --world-harness '* ]]; then
     echo 'Native harness will start the run and collect evidence automatically.'
+elif [[ " $* " == *' --banana-favors '* ]]; then
+    echo 'Start a single-player run. Meet the marked banana neighbors and choose one reward.'
 else
     echo 'Quick Start a single-player run. Order at any computer.'
 fi

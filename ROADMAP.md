@@ -1,8 +1,18 @@
 # Streets of Rogue 1.5 — experiment roadmap
 
+**Current scope — October 12 banana favors:** the user authorized one optional
+banana encounter with competing $15 / First Aid Kit rewards on ordinary generated
+levels. [BANANA_QUEST.md](BANANA_QUEST.md) owns this slice, play command, source map
+and validation. Phone shipping is shelved; existing services, NPC experiments, dog
+and aquarium work are retained. This narrowly reopens encounter placement and
+its disposable tests; broader authored levels remain paused. Earlier scope and
+installed-build statements below are historical.
+
 This is an ordered set of experiments, not a feature promise. The objective is emergent comedy from existing game systems. Each slice gets a repeatable setup, native-world observation and a short ordinary-run playtest before adding variants. `PROJECT_RECORD.md` holds evidence and failures; `README.md` holds current controls and build status.
 
 ## Workstreams
+
+**Current direction — October 7 scope override:** all level-design and setup work is paused. Audit all existing NPC interactions, starting with self-preservation at low health and territory/permission/enforcement. Use ordinary desire/fear calculations as the proposed decision layer; model-generated conversation is optional. See [NPC interaction audit](NPC_INTERACTIONS_AUDIT.md). Earlier experiment ordering and setup/release recommendations below are preserved history and do not authorize continuing paused work.
 
 | Role perspective | Work |
 | --- | --- |
@@ -14,13 +24,13 @@ This is an ordered set of experiments, not a feature promise. The objective is e
 
 These are responsibility areas, not simulated endorsements or a requirement to run multiple agents for every change.
 
-## Current direction — October 4
+## Current direction — October 6
 
-Use `make world-harness` for the first repeatable native World Awareness slice. Two fresh launches/four fixture-owned actors passed discovery, query memberships, numeric inspection, sampled state invariance and retirement without user choreography. Setup mutations remain outside the inspector. See [harness scope](WORLD_AWARENESS_HARNESS.md); this is targeted functional evidence, not completion of every requirement or permission to expand dog behavior.
+Use `make world-harness` for the first repeatable native World Awareness slice. Two fresh launches/four fixture-owned actors passed discovery, query memberships, numeric inspection, sampled state invariance and retirement without user choreography. Setup mutations remain outside the inspector. See [harness scope](WORLD_AWARENESS_HARNESS.md); this is targeted functional evidence, not completion of every requirement. Food expansion has since been explicitly authorized and validated in its separate fixture.
 
-Complete World Awareness validation before adding more NPC behavior: test the installed burst correction (one lighter busy Record sample captured; ordinary suite interrupted after six valid trials), compare corrected ordinary/busy modes, finish native gates and allocation profiling, then validate modest hardware. See [plan](WORLD_AWARENESS_PLAN.md), [requirements](WORLD_AWARENESS_REQUIREMENTS.md) and [handoff](PAUSE_HANDOFF.md). The older stationary suite is complete evidence for its build; busy acceptance is open.
+The user authorized the [bounded roadmap to step 4](WORLD_AWARENESS_TO_DOG_PLAN.md). Sustained-window/crowded-detail/backpressure and controlled native classification/API pause/retirement/scope-reset slices pass. The automatic nine-trial controlled busy comparison passes. The user selected food: single dropped burritos now use ordinary awareness discovery, native approach/pickup/eating and native Follow; healthy dogs preserve the snack. The [food plan](FOOD_INTERACTION_PLAN.md) records automatic validation and the remaining short subjective playcheck. Full release acceptance remains open: combat/hazard performance, physical input paths, actor pooling, remaining effects/barriers/species, allocations and modest hardware. See [requirements](WORLD_AWARENESS_REQUIREMENTS.md) and [handoff](PAUSE_HANDOFF.md).
 
-After this foundation, build bounded dog interest/response using shared proximity and perception: food first, then hydrant when its object/effect semantics are verified. Movement recovery stays separate; a nearby door is only a candidate. Prioritize a repeatable useful encounter over more species. Keep persistence across levels at “probably no.” Native windows suffice for now; bars movement-blocking/sight-permitting policy is planned, not implemented. Detailed barrier simulation is deferred.
+October 7: after judging the dog decent in a normal playtest, the user selected **just hydrant interest**. The bounded detour/mark/return slice uses ordinary awareness discovery and native movement with a cosmetic effect; [hydrant plan](HYDRANT_INTERACTION_PLAN.md) owns its scope and exact validation. Barking and NPC reactions remain unchanged. Movement recovery stays separate; a nearby door is only a candidate. Prioritize a repeatable useful encounter over more species. Keep persistence across levels at “probably no.” Native windows suffice for now; bars movement-blocking/sight-permitting policy is planned, not implemented. Detailed barrier simulation is deferred.
 
 The ordered experiment history below remains useful, but its old “next” tests are superseded by this current direction. Follow/food/release/panel-click observations have since passed limited user tests; a Pet Store fixture remains unbuilt.
 

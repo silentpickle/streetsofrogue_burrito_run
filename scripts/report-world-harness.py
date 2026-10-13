@@ -220,16 +220,17 @@ def assess_pressure(report):
                 reducedQuality=max([e['quality'] for e in reduced], default=0), stop=stop['data'], recovered=recovered['data'])
 
 
-def assess_performance(report):
+def assess_performance(report, busy=False):
     checks = []
     def check(name, condition):
         checks.append(dict(name=name, passed=bool(condition)))
     events = report['native_tests']
-    starts = [r for r in events if r['event'] == 'native-test-performance-start']
-    ends = [r for r in events if r['event'] == 'native-test-performance-trial']
+    starts = [r for r in events if r['event'] == ('native-test-readiness-busy-start' if busy else 'native-test-performance-start')]
+    ends = [r for r in events if r['event'] == ('native-test-readiness-busy-trial' if busy else 'native-test-performance-trial')]
     declared = [r['data'] for r in events if r['event'] in ('native-test-start', 'native-test-ended')]
     check('Performance requested and completed explicitly', len(declared) == 2 and
-          all(d.get('performance') is True for d in declared) and declared[-1].get('trialsStarted') == 9)
+          (all(d.get('extension') == 'busy' for d in declared) if busy else
+           all(d.get('performance') is True for d in declared) and declared[-1].get('trialsStarted') == 9))
     check('Exactly nine performance starts and nine results', len(starts) == len(ends) == 9)
     rows = []
     baseline_context = starts[0]['data'].get('context') if starts else None
@@ -265,7 +266,7 @@ def assess_performance(report):
             check(f'Trial {index}: measured summary available', False)
             continue
         check(f'Trial {index}: correct mode, full warm-up/measurement, valid capture',
-              start['data'].get('mode') == result.get('mode') == mode and result.get('scenario') == 'harness-stationary' and
+              start['data'].get('mode') == result.get('mode') == mode and result.get('scenario') == ('harness-controlled-busy' if busy else 'harness-stationary') and
               result.get('valid') is True and result.get('reason') is None and result.get('warmupSeconds') == 10 and
               number(result.get('durationSeconds')) and 60 <= result['durationSeconds'] <= 75 and
               number(start.get('wallSeconds')) and number(end.get('wallSeconds')) and
@@ -307,7 +308,9 @@ def render(result):
     lines = ['# Native World Awareness harness', '', result['status'], '', f"Build/session: {result['identities']}", '',
              'Scope: two controlled native Courier fixtures. These gates cover discovery, detailed actor metadata,',
              'four query memberships, perception/navigation/tile capture, same-frame read invariance and owned retirement.',
-             ('Stationary performance evidence follows; full World Awareness, busy load, input isolation, level transitions and dog behavior remain open.'
+             ('Bounded readiness evidence follows; full release coverage and dog behavior remain open.'
+              if result.get('readiness') else
+              'Stationary performance evidence follows; full World Awareness, busy load, input isolation, level transitions and dog behavior remain open.'
               if result.get('comparison') else
               'This does not certify full World Awareness, performance, input isolation, level transitions or dog behavior.'), '']
     lines += [f"- {'PASS' if c['passed'] else 'MISSING/FAIL'}: {c['name']}" for c in result['checks']]
@@ -339,6 +342,15 @@ def render(result):
                   'Attraction-disabled Noise fixtures were recycled immediately. Only actual inspector work drives quality.',
                   'This validates the bounded lifecycle burst, not paired busy performance or allocation/hardware acceptance.', '',
                   'Evidence: ' + json.dumps({k: v for k, v in pressure.items() if k != 'checks'})]
+    if result.get('food'):
+        import report_pet_food
+        lines += ['', report_pet_food.render(result['food'])]
+    if result.get('hydrant'):
+        import report_pet_hydrant
+        lines += ['', report_pet_hydrant.render(result['hydrant'])]
+    if result.get('readiness'):
+        import report_world_readiness
+        lines += ['', report_world_readiness.render(result['readiness'])]
     return '\n'.join(lines) + '\n'
 
 
@@ -375,7 +387,55 @@ def main():
             report['issues'].append('performance mode receipt does not agree with native start')
         if type(pressure) is not bool or len(starts) != 1 or starts[0].get('pressure', False) != pressure or pressure and performance:
             report['issues'].append('pressure mode receipt does not agree with native start')
+        extension = receipt.get('extension')
+        if extension not in (None, 'advanced', 'busy', 'native', 'food', 'hydrant', 'npc-probe', 'npc-desires', 'banana-quest') or len(starts) != 1 or starts[0].get('extension') != extension or extension and (performance or pressure):
+            report['issues'].append('extension receipt does not agree with mutually exclusive native mode')
         result = assess(report, performance=bool(performance), pressure=bool(pressure))
+        if extension == 'banana-quest':
+            import report_banana_quest
+            extra = report_banana_quest.assess(report)
+            result['quests'] = extra
+            result['checks'] += extra['checks']
+            if not all(c['passed'] for c in result['checks']):
+                result['status'] = 'INCOMPLETE/FAIL'
+        elif extension == 'npc-desires':
+            import report_npc_desires
+            extra = report_npc_desires.assess(report)
+            result['npc'] = extra
+            result['checks'] += extra['checks']
+            report_npc_desires.export_replays(report, args.run)
+            if not all(c['passed'] for c in result['checks']):
+                result['status'] = 'INCOMPLETE/FAIL'
+        elif extension == 'npc-probe':
+            import report_npc_probe
+            extra = report_npc_probe.assess(report)
+            result['npc'] = extra
+            result['checks'].extend(extra['checks'])
+            if not all(c['passed'] for c in result['checks']):
+                result['status'] = 'INCOMPLETE/FAIL'
+        elif extension == 'hydrant':
+            import report_pet_hydrant
+            extra = report_pet_hydrant.assess(report)
+            result['hydrant'] = extra
+            result['checks'] += extra['checks']
+            if not all(c['passed'] for c in result['checks']):
+                result['status'] = 'INCOMPLETE/FAIL'
+        elif extension == 'food':
+            import report_pet_food
+            extra = report_pet_food.assess(report)
+            result['food'] = extra
+            result['checks'] += extra['checks']
+            if not all(c['passed'] for c in result['checks']):
+                result['status'] = 'INCOMPLETE/FAIL'
+        elif extension:
+            import report_world_readiness
+            extra = report_world_readiness.assess(report, extension, assess_performance)
+            result['readiness'] = extra
+            result['checks'] += extra['checks']
+            if not all(c['passed'] for c in result['checks']):
+                result['status'] = 'INCOMPLETE/FAIL'
+            elif extra.get('comparison') and not extra['comparison']['numericPass']:
+                result['status'] = 'NEEDS INVESTIGATION'
         result['dllSha256'] = binary_hash
         (args.run / 'report.md').write_text(render(result))
         (args.run / 'report.json').write_text(json.dumps(result, indent=2) + '\n')

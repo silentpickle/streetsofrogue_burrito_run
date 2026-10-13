@@ -14,6 +14,11 @@ namespace BurritoRun
         private static readonly Dictionary<Type, Dictionary<string, FieldInfo>> Fields = new Dictionary<Type, Dictionary<string, FieldInfo>>();
         private static readonly string[] EffectFields = { "dangerType", "dangerRadius", "timeLeft", "damage", "explosionType" };
         // Field reads only: arbitrary native properties/methods can mutate the simulation.
+        /// <summary>
+        /// Read an optional native field, caching reflection lookups across the type hierarchy.
+        /// Different native entity types expose different fields; an unavailable value stays
+        /// unknown instead of becoming zero.
+        /// </summary>
         internal static object Read(object source, string name)
         {
             if (source == null) return null;
@@ -42,6 +47,11 @@ namespace BurritoRun
             if (entity is Danger) return WorldKind.Danger;
             return WorldKind.Object;
         }
+        /// <summary>
+        /// Read the appropriate native identifier for this entity type.
+        /// Effects and actors use different ID fields, so a universal UID lookup would misidentify
+        /// some observations.
+        /// </summary>
         internal static int NativeId(Component entity)
         {
             string field = entity is Noise ? "noiseID" : entity is Bullet ? "bulletID" :
@@ -51,6 +61,11 @@ namespace BurritoRun
         internal static bool Active(Component entity) => entity != null && entity.gameObject.activeInHierarchy &&
             (!(entity is Bullet || entity is Noise || entity is Item) || GameController.gameController?.activePooling != true ||
                 !(Read(entity, "fakeActive") is bool fake && !fake)) && !(Read(entity, "initializingForPool") is bool initializing && initializing);
+        /// <summary>
+        /// Copy native identity, position and supported detail into a detached world snapshot.
+        /// Lifecycle callbacks can request a smaller core snapshot to avoid expensive actor and
+        /// object inspection during bursts.
+        /// </summary>
         internal static WorldEntitySnapshot Capture(Component entity, int level, int activation, string collection, bool lifecycleCore = false)
         {
             var position = entity.transform.position;
@@ -116,6 +131,11 @@ namespace BurritoRun
                 Data = data
             };
         }
+        /// <summary>
+        /// Convert a world snapshot to plain capture values.
+        /// The background writer must not retain live Unity components or need to inspect the game
+        /// itself.
+        /// </summary>
         internal static Dictionary<string, object> Detach(WorldEntitySnapshot e) => TraceWorld.Values(
             "key", e.Key, "level", e.Level, "nativeId", e.NativeId, "instance", e.Instance, "activation", e.Activation,
             "kind", e.Kind.ToString(), "name", e.Name, "nativeType", e.NativeType, "collection", e.Collection,
@@ -123,6 +143,11 @@ namespace BurritoRun
             "gameTime", e.GameTime, "wallSeconds", e.WallTime, "active", e.Active, "destroyed", e.Destroyed,
             "helper", e.Helper, "viewportCameraIds", e.ViewportCameraIds, "viewportCapturedAt", e.ViewportCapturedAt, "data", e.Data);
 
+        /// <summary>
+        /// Describe the actor's current goals, path, following state and nearby door candidates.
+        /// Intent and local candidates explain movement but cannot establish reachability, arrival
+        /// or a stall by themselves.
+        /// </summary>
         internal static Dictionary<string, object> Navigation(Agent actor, WorldIndex index, string key)
         {
             var root = actor.brain?.Goals?.Count > 0 ? actor.brain.Goals[0] : null;
@@ -170,6 +195,10 @@ namespace BurritoRun
             };
             return TraceWorld.Values("actor", nav.Actor, "gameTime", nav.CapturedAt, "state", nav.State, "reachability", nav.Reachability);
         }
+        /// <summary>
+        /// Read tile ownership, hazards and actor-specific walking checks at one position.
+        /// Local walkability and safety are useful observations, not a complete route test.
+        /// </summary>
         internal static object Tile(Agent observer, Vector3 point)
         {
             var gc = observer.gc; var tile = gc.tileInfo?.GetTileData(point);

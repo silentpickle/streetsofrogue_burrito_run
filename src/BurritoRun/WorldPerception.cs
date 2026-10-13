@@ -6,6 +6,11 @@ namespace BurritoRun
 {
     internal static class WorldPerception
     {
+        /// <summary>
+        /// Find active native player cameras and record which players share each camera.
+        /// Deduplicating shared cameras avoids treating the same view as independent visibility
+        /// evidence.
+        /// </summary>
         internal static List<Camera> Cameras(GameController gc, out CameraViewSnapshot[] snapshots)
         {
             var cameras = new List<Camera>(); var players = new Dictionary<int, List<int>>();
@@ -33,6 +38,12 @@ namespace BurritoRun
             }
             snapshots = values.ToArray(); return cameras;
         }
+        /// <summary>
+        /// Sample geometry LOS, facing, range and camera/renderer evidence as separate
+        /// observations.
+        /// A target can be rendered yet obstructed, or clear of geometry yet outside the actor's
+        /// cone; none alone proves native awareness.
+        /// </summary>
         internal static PerceptionEvidence Capture(Agent observer, Component target, string observerKey, string targetKey, List<Camera> cameras)
         {
             var result = new PerceptionEvidence
@@ -85,6 +96,10 @@ namespace BurritoRun
             }
             result.Views = views.ToArray(); return result;
         }
+        /// <summary>
+        /// Copy perception results into plain values for recording.
+        /// Background serialization must preserve the observation without reaching back into Unity.
+        /// </summary>
         internal static Dictionary<string, object> Detach(PerceptionEvidence p) => TraceWorld.Values("observer", p.Observer,
             "target", p.Target, "gameTime", p.CapturedAt, "distance", p.Distance, "clearLOS", p.ClearLOS,
             "insideCone", p.InsideCone, "insideNativeRange", p.InsideNativeRange, "coneDegrees", p.ConeDegrees,

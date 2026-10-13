@@ -1,6 +1,6 @@
 # World Awareness push — architecture and 30 FPS contract
 
-Updated October 4, 2026. Deliver the reusable read-only world service, live overlay, paused inspector, structured logs and offline reports. Dog interests and movement recovery are separate follow-ons. [Handoff](PAUSE_HANDOFF.md) owns the installed/prepared state; [requirements](WORLD_AWARENESS_REQUIREMENTS.md) owns acceptance evidence.
+Updated October 6, 2026. Deliver the reusable read-only world service, live overlay, paused inspector, structured logs and offline reports. Dog interests and movement recovery are separate follow-ons. [Handoff](PAUSE_HANDOFF.md) owns the installed/prepared state; [requirements](WORLD_AWARENESS_REQUIREMENTS.md) owns acceptance evidence.
 
 ## Milestones and completion gates
 
@@ -11,7 +11,7 @@ Updated October 4, 2026. Deliver the reusable read-only world service, live over
 | M2 queries/perception | Implemented; partially verified | Distance/index reference checks and native selected clear/wall/cone examples; viewport edges and broader native classification/coverage remain open |
 | M3 navigation evidence | Implemented; partially verified | Native goal/health/path/door fields captured; controlled waiting/fleeing/progress/door-state examples remain open |
 | M4 inspector workflow | Implemented; partially verified | F10 pause, darker overlay and F5 numeric world/legacy export observed; full input-isolation/incident coverage gates remain open |
-| M5 native/performance | In progress; not accepted | Stationary ordinary numeric comparison passed on older build; one valid busy Record sample exposed bursts; corrected-build comparisons, hitches, allocations and modest hardware remain open |
+| M5 native/performance | In progress; not accepted | Stationary comparison passes for its older build; sustained native window/backpressure and crowded recovery pass; nine-trial foreground controlled motion/effect comparison passes; full combat/hazard comparison, allocations and modest hardware remain open |
 
 “Implemented” means code exists; a compile or synthetic check cannot verify the full native requirement. Logging and performance instrumentation accompany every milestone. Save a report/checkpoint at each gate.
 
@@ -31,7 +31,7 @@ See [architecture](WORLD_AWARENESS_ARCHITECTURE.md) for implemented caps and con
 
 Under load, defer off-target/off-screen LOS, reduce overlay/nearby detail, reduce refresh 5→2→1 Hz, and suspend optional detailed recording under writer saturation. Observer/target and lifecycle/loss records have priority. Display/export quality reason, refresh interval, age, deferred checks, queue depth and dropped records. Restore gradually with sustained observed headroom. Paused detail costs are reported separately. Lossy or stale capture never claims completeness.
 
-The burst correction (installed; native retest pending) adds one-second pressure windows (mean >1 ms or >5% frames over 2 ms), reduction after two pressured windows, and 30 seconds of observed recovery per level. Minimal lifecycle metadata precedes scheduled detail/camera reads. One populated lighter busy Record retest exercised these changes with aggregate diagnostic targets met; native sustained pressure/recovery remains open. See catalog for numeric evidence; source checks alone do not establish native cost.
+The burst correction (historical October 4 checkpoint) adds one-second pressure windows (mean >1 ms or >5% frames over 2 ms), reduction after two pressured windows, and 30 seconds of observed recovery per level. Minimal lifecycle metadata precedes scheduled detail/camera reads. One populated lighter busy Record retest originally exercised these changes; the October 6 controlled native window/backpressure/crowded-detail checks and busy comparison now pass. See catalog for numeric evidence; source checks alone do not establish native cost.
 
 ## Performance acceptance and maintenance
 
@@ -45,8 +45,10 @@ Changes to registry, queries, overlays, hooks or logging rerun relevant checks/b
 
 ## Current sequence and scope
 
-The tested burst DLL has one completed lighter busy Record retest; finish/review the partial ordinary suite and verify a heavier native pressure/recovery case; complete paired busy comparisons and remaining functional gates; then profile allocations and validate modest hardware. The completed older stationary suite and valid busy stress sample stay in the evidence ledger.
+Follow [roadmap to the dog decision](WORLD_AWARENESS_TO_DOG_PLAN.md). October 6 additions pass sustained window-budget reduction, actual crowded-detail shedding/restoration, bounded writer backpressure and natural recovery; controlled food/hydrant/door reads, API pause/resume, owned retirement and native scope reset. The nine-trial controlled actor-motion/Noise/projectile lifecycle comparison passes. Select one dog response at step 4 after this bounded validation, then use a short visible playtest to judge it. No dog behavior has changed.
 
-Use practical barriers: native LOS for walls/windows now; defer exact window damage/blocker instrumentation. Future bars policy blocks movement but permits sight, retaining native evidence separately from the override. It is not implemented and does not prove hearing or reachability. Cross-level pet persistence stays “probably no.” Expand dog desires/responses only after this foundation has useful evidence.
+Recovery now recognizes within-budget isolated outliers as headroom; pressured windows and actual reductions still reset the 30-second timer. Thresholds are unchanged. The failed pilots, verified cases and exact builds remain in the evidence ledger. Full combat/hazard performance, physical input paths, actor pooling, barrier/species/effect matrices, allocations and modest hardware remain release work.
+
+Use practical barriers: native LOS for walls/windows now; defer exact window damage/blocker instrumentation. Future bars policy blocks movement but permits sight, retaining native evidence separately from the override. It is not implemented and does not prove hearing or reachability. Cross-level pet persistence stays “probably no.”
 
 Previous plan snapshots are [archived](docs/history/2026-10-04-before-consolidation-WORLD_AWARENESS_PLAN.md).

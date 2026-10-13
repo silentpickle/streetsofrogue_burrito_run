@@ -4,11 +4,14 @@ project_dir="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$project_dir"
 export BURRITO_HARNESS_PERFORMANCE=0
 export BURRITO_HARNESS_PRESSURE=0
+export BURRITO_HARNESS_EXTENSION=''
 if [ "$#" -eq 1 ] && [ "$1" = '--performance' ]; then
     export BURRITO_HARNESS_PERFORMANCE=1
 elif [ "$#" -eq 1 ] && [ "$1" = '--pressure' ]; then
     export BURRITO_HARNESS_PRESSURE=1
-elif [ "$#" -ne 0 ]; then echo 'Usage: bash scripts/world-harness.sh [--performance|--pressure]' >&2; exit 2; fi
+elif [ "$#" -eq 1 ] && { [ "$1" = '--advanced' ] || [ "$1" = '--busy' ] || [ "$1" = '--native' ] || [ "$1" = '--food' ] || [ "$1" = '--hydrant' ] || [ "$1" = '--npc-probe' ] || [ "$1" = '--npc-desires' ] || [ "$1" = '--banana-quest' ]; }; then
+    export BURRITO_HARNESS_EXTENSION="${1#--}"
+elif [ "$#" -ne 0 ]; then echo 'Usage: bash scripts/world-harness.sh [--performance|--pressure|--advanced|--busy|--native|--food|--hydrant|--npc-probe|--npc-desires|--banana-quest]' >&2; exit 2; fi
 # Refuse to replace a loaded DLL. Failure to enumerate processes is also a refusal.
 set +e
 processes="$(pgrep -fl '/StreetsOfRogueMac.app/Contents/MacOS/Streets of Rogue' 2>&1)"
@@ -46,6 +49,7 @@ dll = Path('.tools/loader/BepInEx/plugins/BurritoRun.dll')
 (root / 'BurritoRun.dll').write_bytes(dll.read_bytes())
 (root / 'harness-run.json').write_text(json.dumps(dict(fixtureRevision=1, repeats=2, performance=os.environ['BURRITO_HARNESS_PERFORMANCE'] == '1',
     pressure=os.environ['BURRITO_HARNESS_PRESSURE'] == '1',
+    extension=os.environ['BURRITO_HARNESS_EXTENSION'] or None,
     dllSha256=hashlib.sha256(dll.read_bytes()).hexdigest(), profile=str(root / 'profile')), indent=2) + '\n')
 PY
 echo "Native World Awareness harness: $BURRITO_HARNESS_ROOT"
@@ -57,12 +61,15 @@ import subprocess
 import sys
 performance = os.environ['BURRITO_HARNESS_PERFORMANCE'] == '1'
 pressure = os.environ['BURRITO_HARNESS_PRESSURE'] == '1'
-timeout = 900 if performance else 300 if pressure else 180
+extension = os.environ['BURRITO_HARNESS_EXTENSION']
+timeout = 900 if performance or extension == 'busy' else 500 if extension else 300 if pressure else 180
 args = ['bash', 'scripts/launch.sh', '--burrito-test', '--world-harness']
 if performance:
     args.append('--world-performance')
 if pressure:
     args.append('--world-pressure')
+if extension:
+    args.append('--world-' + extension)
 process = subprocess.Popen(args, start_new_session=True)
 try:
     sys.exit(process.wait(timeout=timeout))

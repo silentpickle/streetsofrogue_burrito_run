@@ -7,6 +7,12 @@ namespace BurritoRun
     {
         // Matches GameController.SetTimeScale: native freeze frames stop simulation without pausing play.
         // Unknown zero-scale states remain pauses; UI pauses take precedence over a coincident freeze.
+        /// <summary>
+        /// Recognize a native freeze frame only when the underlying game clocks still indicate a
+        /// running world.
+        /// Known game effects stay in performance measurements; UI and unknown pauses must not be
+        /// silently excused.
+        /// </summary>
         internal static bool IsNativeFreeze(float scale, float mainScale, float secondaryScale,
             float freezeFrame, bool freezeDisabled, bool justEndedFreeze, bool uiPaused)
         {
@@ -29,12 +35,22 @@ namespace BurritoRun
         private int nativeFreezeFrames;
         internal bool Running { get; private set; }
         internal string Status { get; private set; } = "No trial started";
+        /// <summary>
+        /// Begin a labeled trial with a fresh warm-up and measurement window.
+        /// Old samples must not carry into a comparison of another scenario or observation mode.
+        /// </summary>
         internal void Start(string scenarioName, string modeName, double now)
         {
             if (Running) throw new InvalidOperationException("Trial already running");
             scenario = scenarioName; mode = modeName; started = now; measuredSince = 0;
             frames.Clear(); costs.Clear(); nativeFreezeFrames = 0; Running = true; Status = "Warm-up (10 seconds)";
         }
+        /// <summary>
+        /// Accumulate the bounded measured window or end the trial with an explicit invalidation
+        /// reason.
+        /// Pauses, invalid samples and sample-cap exhaustion invalidate evidence instead of
+        /// trimming inconvenient frames.
+        /// </summary>
         internal Dictionary<string, object> Tick(double now, double frameMs, double costMs, string invalidReason = null, bool nativeFreeze = false)
         {
             if (!Running) return null;
@@ -50,6 +66,11 @@ namespace BurritoRun
             return now - measuredSince >= 60 ? Finish(now, null) : null;
         }
         internal Dictionary<string, object> Cancel(double now, string reason) => Running ? Finish(now, reason) : null;
+        /// <summary>
+        /// Return detached frame-tail, diagnostic-cost and validity results for offline comparison.
+        /// A complete timing window still requires matching scenario activity before it supports a
+        /// performance claim.
+        /// </summary>
         private Dictionary<string, object> Finish(double now, string reason)
         {
             Running = false; Status = reason == null ? "Trial captured; compare in offline report" : "Invalid trial: " + reason;

@@ -16,6 +16,10 @@ namespace BurritoRun
         private static bool Prefix(string myName, string type, ref string __result)
         {
             if (myName == Names.Order && type == "Interface") __result = "Order Burrito here ($10)";
+            else if (myName == QuestService.AcceptButton && type == "Interface") __result = "Hear banana offers";
+            else if (myName == QuestService.CashButton && type == "Interface") __result = "Give one banana for $15";
+            else if (myName == QuestService.KitButton && type == "Interface") __result = "Give one banana for First Aid Kit";
+            else if (myName == QuestService.AbandonButton && type == "Interface") __result = "Abandon banana favor";
             else if (myName == Names.Phone && type == "Item") __result = "Services Phone";
             else if (myName == Names.Phone && type == "Description") __result = "Food delivery and questionable convenience. Use to open Services. F2 also opens it.";
             else if (myName == Names.Food && type == "Item") __result = "Delivery Burrito";
@@ -97,9 +101,32 @@ namespace BurritoRun
     {
         private static void Postfix(Computer __instance)
         {
-            if (__instance.functional && !__instance.destroyed &&
+            if (Plugin.Instance.ServicesAvailable && __instance.functional && !__instance.destroyed &&
                 Plugin.Instance.Delivery.CanOrder(__instance.interactingAgent) && !__instance.buttons.Contains(Names.Order))
                 __instance.buttons.Add(Names.Order);
+        }
+    }
+
+    [HarmonyPatch(typeof(Agent), nameof(Agent.DetermineButtons))]
+    internal static class FavorButtons
+    {
+        private static void Postfix(Agent __instance)
+        {
+            try { Plugin.Instance?.Quests?.AddButtons(__instance); }
+            catch (Exception error) { Plugin.Instance?.Error(error); }
+        }
+    }
+
+    [HarmonyPatch(typeof(Agent), nameof(Agent.PressedButton), new[] { typeof(string), typeof(int) })]
+    internal static class FavorInteraction
+    {
+        private static bool Prefix(Agent __instance, string __0)
+        {
+            if (!QuestService.OwnButton(__0)) return true;
+            try { Plugin.Instance?.Quests?.Handle(__instance, __instance.interactingAgent, __0); }
+            catch (Exception error) { Plugin.Instance?.Error(error); Plugin.Instance?.Quests?.Close(); }
+            __instance.StopInteraction();
+            return false;
         }
     }
 

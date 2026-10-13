@@ -26,6 +26,11 @@ namespace BurritoRun
         internal BarkTrace Trace;
         internal AquariumService Aquarium;
         internal PetService Pets;
+        internal NpcPickupProbe NpcProbe;
+        internal NpcDesires NpcDesires;
+        internal QuestService Quests;
+        internal bool BananaMode;
+        internal bool ServicesAvailable => !BananaMode || TestMode;
         internal bool TestMode;
         private Vector2 testPanelScroll;
         private float testPanelInputBlockedUntil;
@@ -49,10 +54,18 @@ namespace BurritoRun
 
         // Unity discovers these lifecycle callbacks by name.
 #pragma warning disable IDE0051
+        /// <summary>
+        /// Create the plugin services, configure launch modes and attach native Harmony hooks.
+        /// One shared writer and session context let otherwise separate experiments produce
+        /// attributable evidence.
+        /// </summary>
         private void Awake()
         {
             Instance = this;
             TestMode = Array.IndexOf(Environment.GetCommandLineArgs(), "--burrito-test") >= 0;
+            bool configuredFavors = Config.Bind("Favors", "Enabled", false, "Enable one optional banana encounter per single-player run.").Value;
+            BananaMode = Array.IndexOf(Environment.GetCommandLineArgs(), "--banana-favors") >= 0 || configuredFavors;
+            if (BananaMode && !TestMode) notice = "Local Favors loaded. Start a single-player run to meet the banana neighbors.";
             Delivery = new DeliveryService(this);
             Phone = new ServicesPhone(this);
             Inspector = new DoorwayInspector(this);
@@ -62,6 +75,9 @@ namespace BurritoRun
             Diagnostics = new TestDiagnostics(this);
             Aquarium = new AquariumService(this);
             Pets = new PetService(this);
+            NpcProbe = new NpcPickupProbe(this);
+            NpcDesires = new NpcDesires(this);
+            Quests = new QuestService(this);
             Trace = new BarkTrace(this, Diagnostics.LogDirectory, Diagnostics.Session);
             Awareness = new WorldAwareness(this);
             new Harmony("local.streetsofrogue.burritorun").PatchAll(typeof(Plugin).Assembly);
@@ -95,6 +111,12 @@ namespace BurritoRun
         }
 
 #pragma warning disable IDE0051 // Unity lifecycle callbacks, invoked by the engine.
+        /// <summary>
+        /// Advance native services, observation, fixtures and developer hotkeys on Unity's main
+        /// thread.
+        /// Subsystem-specific recovery prevents a broken experiment from leaving its delivery or
+        /// NPC action permanently active.
+        /// </summary>
         private void Update()
         {
             Awareness?.BeginFrame();
@@ -102,6 +124,10 @@ namespace BurritoRun
             catch (Exception error) { Error(error); Delivery.AbortAfterError(); }
             try { Aquarium.Tick(); }
             catch (Exception error) { Error(error); }
+            try { NpcProbe.Tick(); NpcDesires.Tick(); }
+            catch (Exception error) { Error(error); NpcProbe.Disable("native-error"); }
+            try { Quests.Tick(); }
+            catch (Exception error) { Error(error); Quests.Close(); }
             try { Pets.Tick(); }
             catch (Exception error) { Error(error); }
             var diagnosticTimer = System.Diagnostics.Stopwatch.StartNew();
@@ -128,11 +154,12 @@ namespace BurritoRun
             Phone.Draw();
             if (Phone.IsOpen) return;
             Awareness.DrawOverlay();
+            Quests.Draw();
             var style = new GUIStyle(GUI.skin.box) { fontSize = 16, alignment = TextAnchor.MiddleLeft, wordWrap = true };
             if (Time.realtimeSinceStartup < noticeUntil || Delivery.Active)
                 GUI.Box(new Rect(15, Screen.height - 105, Math.Min(610, Screen.width - 30), 85),
-                    "BURRITO RUN " + BuildLabel + "\n" + (Delivery.Active ? Delivery.Description : notice), style);
-            GUI.Label(new Rect(15, Screen.height - 25, 500, 25), "Burrito Run " + BuildLabel);
+                    (BananaMode && !TestMode ? "LOCAL FAVORS\n" : "BURRITO RUN " + BuildLabel + "\n") + (Delivery.Active ? Delivery.Description : notice), style);
+            if (!BananaMode || TestMode) GUI.Label(new Rect(15, Screen.height - 25, 500, 25), "Burrito Run " + BuildLabel);
             if (!TestMode || !Delivery.CanOrder(GameController.gameController?.playerAgent)) return;
             var panelRect = new Rect(Screen.width - 275, 15, 260,
                 Math.Min(720, Math.Max(200, Screen.height - 30)));
@@ -155,11 +182,15 @@ namespace BurritoRun
             GUILayout.Label("TEST PET  |  " + Pets.Status);
             if (GUILayout.Button("Spawn test dog (F6)")) Pets.SpawnTestPet(GameController.gameController.playerAgent);
             if (GUILayout.Button("Drop one test snack")) Pets.DropTestSnack(GameController.gameController.playerAgent);
+            if (GUILayout.Button("Place one test hydrant")) Pets.PlaceTestHydrant(GameController.gameController.playerAgent);
             if (GUILayout.Button("Release test dog (F7)")) Pets.ReleaseTestPet();
             GUILayout.Label(Pets.Barks.Status);
             Pets.Barks.AutomaticBarks = GUILayout.Toggle(Pets.Barks.AutomaticBarks, "Automatic stranger barks");
             if (GUILayout.Button("Bark near stranger (F8)")) Pets.BarkTestPet();
             if (GUILayout.Button("Distract guard (F9)")) Pets.DistractGuard();
+            NpcProbe.DrawCommands();
+            if (GUILayout.Button("Start banana favor (once this run)")) Quests.Start(GameController.gameController.playerAgent);
+            NpcDesires.DrawCommands();
             GUILayout.Label("SCENARIOS  |  " + Scenarios.Status);
             if (GUILayout.Button("Start: delivery handoff")) Scenarios.StartHandoff(GameController.gameController.playerAgent);
             if (GUILayout.Button("Start: drop and recover")) Scenarios.StartDropRecovery(GameController.gameController.playerAgent);
@@ -183,7 +214,12 @@ namespace BurritoRun
         }
 
 #pragma warning disable IDE0051 // Unity invokes OnDestroy by name.
-        private void OnDestroy() { Harness?.Close(); Pets?.Barks.Reset("plugin-unload"); Trace?.Interrupt("plugin-unload"); Awareness?.Close(); CaptureWriter?.Dispose(); }
+        /// <summary>
+        /// Release service-owned actions and queue evidence shutdown before stopping the shared
+        /// writer.
+        /// Cleanup order matters because closing a service can still produce final records.
+        /// </summary>
+        private void OnDestroy() { Quests?.Close(); NpcProbe?.Disable("plugin-unload"); Harness?.Close(); Pets?.Barks.Reset("plugin-unload"); Trace?.Interrupt("plugin-unload"); Awareness?.Close(); CaptureWriter?.Dispose(); }
 #pragma warning restore IDE0051
     }
 }

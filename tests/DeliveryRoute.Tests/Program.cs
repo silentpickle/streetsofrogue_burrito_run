@@ -8,6 +8,13 @@ static void Check(bool condition, string name)
 }
 static bool Near(float value, float expected) => Math.Abs(value - expected) < 0.0001f;
 
+if (args.Length == 2 && args[0] == "--npc-replay")
+{ Environment.ExitCode = NpcDecisionChecks.ReplayFile(args[1]); return; }
+if (args.Length != 0)
+{ Console.Error.WriteLine("Usage: --npc-replay <capture.json>, or no arguments for checks"); Environment.ExitCode = 2; return; }
+NpcDecisionChecks.Run(Check);
+QuestChecks.Run(Check);
+
 var stalled = new DeliveryRoute(0, 8);
 TraceChecks.Run(Check);
 WorldChecks.Run(Check);
@@ -79,14 +86,31 @@ Check(PetPolicy.Choose(true, true, 3, false) == PetIntent.ChaseFood,
     "pet detours toward nearby dropped food");
 Check(PetPolicy.Choose(true, true, 7, false) == PetIntent.Follow,
     "pet ignores distant food");
-Check(PetPolicy.Choose(true, true, 0.5f, false) == PetIntent.Follow,
-    "pet stops chasing when it reaches food");
+Check(PetPolicy.Choose(true, true, 0.5f, false) == PetIntent.ChaseFood,
+    "nearby food enters the interaction, including at arrival");
 Check(PetPolicy.Choose(true, true, 3, true) == PetIntent.Follow,
     "pet does not immediately re-chase a sniffed snack");
+Check(PetPolicy.EligibleFood("HotFud", 1, false, false), "one ordinary burrito is eligible");
+Check(!PetPolicy.EligibleFood("HotFud", 2, false, false), "food stacks cannot be consumed wholesale");
+Check(!PetPolicy.EligibleFood("HotFud", 1, true, false), "protected food is rejected");
+Check(!PetPolicy.EligibleFood("HotFud", 1, false, true), "airborne or unpickable food is rejected");
+Check(!PetPolicy.EligibleFood("Beer", 1, false, false), "other consumables are outside the first food slice");
+Check(!PetPolicy.CanEat(100, 100) && !PetPolicy.CanEat(0, 100) && PetPolicy.CanEat(70, 100),
+    "native hunger gate preserves full health and death, permits injured eating");
 Check(PetPolicy.Choose(false, true, 3, false) == PetIntent.Wander,
     "owner loss takes priority over food");
 
 var barking = new PetBarkPolicy();
+var hydrants = new PetHydrantPolicy();
+Check(hydrants.CanNotice("activation-1", 0), "fresh hydrant activation can attract interest");
+hydrants.Finish("activation-1", 2);
+Check(!hydrants.CanNotice("activation-1", 1000), "same hydrant is not revisited after cooldown");
+Check(!hydrants.CanNotice("activation-2", 46) && hydrants.CanNotice("activation-2", 47),
+    "different hydrant waits for the full game-time cooldown");
+for (int i = 2; i <= 32; i++) hydrants.Finish("activation-" + i, i * 50);
+Check(!hydrants.CanNotice("activation-33", 5000), "hydrant memory and detours are capped per level");
+hydrants.Reset();
+Check(hydrants.CanNotice("activation-1", 0), "real level reset clears hydrant interest memory");
 Check(!PetBarkPolicy.GuardInRange(4.99f), "guard probe avoids native close-range investigation cutoff");
 Check(PetBarkPolicy.GuardInRange(5), "guard probe accepts minimum useful separation");
 Check(PetBarkPolicy.GuardInRange(6.5f), "guard probe stays inside louder native hearing radius");

@@ -21,6 +21,11 @@ namespace BurritoRun
             this.arrivalRadius = arrivalRadius;
         }
 
+        /// <summary>
+        /// Switch a slow or interrupted route to a bounded meet-the-driver fallback.
+        /// Native AI owns movement; the service should offer a recoverable outcome rather than wait
+        /// forever for arrival.
+        /// </summary>
         internal bool NeedsMeeting(float now, float distance, bool nativeJobActive)
         {
             if (WaitingForCustomer || distance < arrivalRadius) return false;
@@ -37,6 +42,11 @@ namespace BurritoRun
             return BeginMeeting(now, reason);
         }
 
+        /// <summary>
+        /// Start the customer meeting timer once and remember why the route ended.
+        /// Repeated ticks must not extend the wait indefinitely or change the original fallback
+        /// explanation.
+        /// </summary>
         internal bool BeginMeeting(float now, string reason)
         {
             if (WaitingForCustomer) return false;

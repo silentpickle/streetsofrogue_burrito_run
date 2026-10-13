@@ -1,12 +1,43 @@
 # Streets of Rogue 1.5 / Burrito Run — project record
 
-Last updated: 2026-10-04. This is a record of the work and evidence available in this directory, not a claim that every idea in `projectbrief.txt` has been implemented. It is intended to let a future developer reproduce the playable slice, understand why it was built this way, and resume without repeating the failed paths. See `ROADMAP.md` for grouped future milestones.
+Last updated: 2026-10-07. This is a record of the work and evidence available in this directory, not a claim that every idea in `projectbrief.txt` has been implemented. It is intended to let a future developer reproduce the playable slice, understand why it was built this way, and resume without repeating the failed paths. See `ROADMAP.md` for grouped future milestones.
 
-## Current direction — October 4
+## Current direction — October 7
 
-We are validating the read-only World Awareness foundation before adding dog interests or recovery. The latest completed native busy Record capture verifies the freeze-frame fix but reveals short diagnostic bursts; the tested lifecycle/quality correction is now installed and boot confirmed, with one lighter busy Record retest captured and the ordinary suite interrupted after six valid trials. The older nine-trial stationary ordinary comparison passes its numeric targets on this development host. These findings do not complete the busy or hardware release gates.
+World Awareness now has passing bounded native correctness, lifecycle, pressure/recovery and controlled busy comparisons on this Mac. Food interaction passed its separate native fixture, and the user judged the dog decent in ordinary play. The user then selected **just hydrant interest**. Its automated native run passes 67 gates: approach, brief cosmetic marking, restored Follow, cooldown/revisit suppression, target removal, timeout, release and owned cleanup. The exact report is [238d7320](.runtime/world-harness/20261007-232321-7312/report.md), build `0.6.0+20261008-052320`. The build timestamp is UTC; this project entry uses the client's October 7 date.
 
 [PAUSE_HANDOFF.md](PAUSE_HANDOFF.md) owns the exact runtime/prepared state and next steps. [KNOWLEDGEBASE.md](KNOWLEDGEBASE.md) maps current docs and durable decisions; [WORLD_AWARENESS_REQUIREMENTS.md](WORLD_AWARENESS_REQUIREMENTS.md) distinguishes implemented from verified. Detailed sessions, artifacts and test numbers live in the awareness validation/catalog pages. Windows/blocker matrices are deferred; bars sight policy is planned only. Pet persistence remains “probably no.”
+
+## What we ran into — October 7
+
+The scope is growing through concrete integration findings. The reusable work now includes temporary native goal coordination, state restoration and independent evidence collection alongside read-only discovery. Further behavior choices remain explicit; discovering an engine constraint does not automatically select another feature.
+
+| Finding | Evidence and resulting decision |
+|---|---|
+| A movement command does not suspend following | Native GoHere leaves following attached. Early pilots failed to complete the detour; the service now temporarily clears following and restores it afterward. These varied pilots do not isolate every failure to one cause. |
+| Native idle can move the actor | A marking pilot aborted after 0.467 seconds while GoalIdle/GoalPathTo returned toward the original starting position. Assembly inspection confirmed the rule. A temporary idle anchor now holds the pose, with restoration independently checked in the passing run. |
+| Render coordinates and useful arrival differ from a proposed path point | Object sorting depth must not become a movement destination. Commands use ground-plane Z=0; arrival uses measured distance to the actual solid hydrant. Native pathing may finish on another face. |
+| Diagnostic data needs the same rigor as behavior | A raw Unity Vector3 was rejected by the detached capture guard. The failed capture is preserved; main-thread conversion to numeric arrays fixes the payload. Original pilot reports and binaries remain available. |
+| Fixture cleanup can look like a gameplay failure | The earlier reported disappearing dog was the automatic food fixture destroying its owned actor and quitting after validation. Ordinary playtesting uses a separate launch without automatic cleanup or exit. |
+| Native test setup and ordinary menu control have different limits | The native fixture completed automatically. The subsequent ordinary launch was last observed at the menu: UI clicks/keys did not advance it, and Dock focus control timed out. No ordinary hydrant encounter is claimed from that session. |
+| NPC response remains a product question | The user found apparent fight/flee choices limiting. Earlier native noise/curiosity activations exist, but useful visible reactions remain unproven and this particular observation has no attributed cause. No NPC response changes were selected. |
+
+[HYDRANT_INTERACTION_PLAN.md](HYDRANT_INTERACTION_PLAN.md) retains the exact failed pilots, corrections, passing checks and limits. Fixture mutations stay separate from the read-only inspector; reports independently recompute outcomes from preserved captures.
+
+## Growing scope and the next boundary
+
+| Area | Status / next boundary |
+|---|---|
+| World discovery and evidence | Bounded native readiness checks pass on this host. Full release acceptance still needs allocation, combat/hazard and other-hardware evidence. |
+| Dog food and hydrant interests | Separate native fixtures pass. Ordinary food play has user feedback; hydrant marking readability and physical panel input still need an ordinary playcheck. |
+| Movement and native goal coordination | Scoped detour/idle restoration is implemented. General doorway recovery and broader interruption coverage remain future work. |
+| NPC interaction variety | Recorded as an emerging design question. A specific encounter and desired response would define a future bounded experiment. |
+
+The immediate human contribution is a short visible hydrant check: whether the marking reads clearly and the dog returns naturally. Broader social behavior can be prioritized afterward. This record update adds documentation only; it does not start another behavior change or disturb the game.
+
+## Historical October 4 foundation checkpoint
+
+At that checkpoint, the busy Record capture had verified the freeze-frame fix but exposed short diagnostic bursts. A lifecycle/quality correction was installed and boot confirmed; one lighter busy Record retest was captured and the ordinary suite stopped after six valid trials. Later readiness and controlled busy runs supersede that partial stopping state; their exact evidence is retained in the current handoff.
 
 ## Historical handoff snapshots — through October 3
 

@@ -7,11 +7,21 @@ namespace BurritoRun
     {
         // Evidence access only. Do not seed the registry: the normal census must discover the fixture.
         internal int HarnessLevel => level;
+        internal double HarnessFrameWorkMs => lastFrameWorkMs;
         internal bool HarnessNativeFreeze => NativeFreeze(GameController.gameController);
         internal bool HarnessBenchmarkRunning => benchmark.Running;
         internal bool HarnessCaptureClean => exceptions == 0 && journal.Dropped == 0 && plugin.CaptureWriter.Dropped == 0 &&
             journal.Failure == null && plugin.CaptureWriter.Failure == null;
         internal Dictionary<string, object> HarnessLastTrial { get; private set; }
+        internal Dictionary<string, object> HarnessDetailFrame => latestDetailFrame;
+        internal object HarnessStateRead(Agent player, Agent actor) => HarnessState(player, actor);
+        internal void HarnessCloseDetail() => CloseDetail();
+        internal string[] HarnessLiveKeys()
+        {
+            var keys = new List<string>();
+            foreach (var entity in Index.Values) if (entity.Level == level && entity.Active && !entity.Destroyed) keys.Add(entity.Key);
+            return keys.ToArray();
+        }
         internal WorldEntitySnapshot HarnessSnapshot(Component entity) => entity != null &&
             entries.TryGetValue(entity.GetInstanceID(), out var entry) ? Index.Get(entry.Key) : null;
         internal Dictionary<string, object> HarnessPressureEvidence() => TraceWorld.Values("quality", Quality.Level,

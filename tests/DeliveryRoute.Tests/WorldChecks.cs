@@ -73,6 +73,16 @@ internal static class WorldChecks
         var isolatedQuality = new AwarenessQuality();
         for (int i = 0; i < 240; i++) isolatedQuality.Observe(i == 10 ? 100 : .1, false, i / 60f);
         check(isolatedQuality.Level == 0, "one isolated hitch does not cause repeated quality reductions");
+        var recoverOutliers = new AwarenessQuality();
+        recoverOutliers.Observe(.1, true, 0);
+        for (int i = 1; i <= 1860; i++) recoverOutliers.Observe(i % 300 == 0 ? 2.1 : .1, false, i / 60f);
+        check(recoverOutliers.Level == 0,
+            "within-budget isolated outliers do not indefinitely prevent natural recovery");
+        var recoverPressure = new AwarenessQuality();
+        recoverPressure.Observe(.1, true, 0);
+        for (int i = 1; i <= 1860; i++) recoverPressure.Observe(1.2, false, i / 60f);
+        check(recoverPressure.Level > 0 && recoverPressure.Reason == "window-budget",
+            "sustained mean pressure still prevents recovery");
         var queueQuality = new AwarenessQuality(); queueQuality.Observe(.1, true, 1);
         check(queueQuality.Level == 1 && queueQuality.Reason == "writer-backpressure", "writer saturation reduces recording quality immediately");
         // Synthetic spaced spikes match the worst recorded window's mean/p95, not its unavailable raw frame sequence.

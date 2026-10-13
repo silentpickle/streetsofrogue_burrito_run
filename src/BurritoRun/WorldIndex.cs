@@ -15,6 +15,10 @@ namespace BurritoRun
         private static int Cell(float value) => (int)Math.Floor(value / CellSize);
         private static long Key(int x, int y) => ((long)x << 32) | (uint)y;
         private static long Key(WorldEntitySnapshot entity) => Key(Cell(entity.X), Cell(entity.Y));
+        /// <summary>
+        /// Insert or replace a detached world snapshot and update its spatial bucket.
+        /// Removing the previous bucket entry prevents moving objects from appearing in two places.
+        /// </summary>
         internal void Put(WorldEntitySnapshot entity)
         {
             if (entity == null || entity.Key == null || float.IsNaN(entity.X) || float.IsNaN(entity.Y) ||
@@ -33,12 +37,21 @@ namespace BurritoRun
             bucket.Remove(entity.Key);
             if (bucket.Count == 0) cells.Remove(cell);
         }
+        /// <summary>
+        /// Retire one activation from both identity lookup and spatial queries.
+        /// Leaving either entry behind could offer a removed or recycled target to consumers.
+        /// </summary>
         internal void Remove(string key)
         {
             if (!entities.TryGetValue(key, out var entity)) return;
             RemoveCell(entity); entities.Remove(key);
         }
         internal void Clear() { entities.Clear(); cells.Clear(); }
+        /// <summary>
+        /// Filter sampled entities and return a stable distance-ordered page of matches.
+        /// The spatial hash limits nearby searches, while large requests enumerate entries instead
+        /// of enormous empty grids.
+        /// </summary>
         internal WorldQueryResult Query(WorldQuery query)
         {
             if (query == null || float.IsNaN(query.X) || float.IsInfinity(query.X) ||
@@ -115,6 +128,11 @@ namespace BurritoRun
         internal int WindowFrames { get; private set; }
         internal int WindowOverBudget { get; private set; }
         internal float WindowCapturedAt { get; private set; }
+        /// <summary>
+        /// Adjust observation detail from measured work and writer pressure.
+        /// Sustained overload reduces detail, while gradual recovery avoids bouncing between
+        /// quality levels.
+        /// </summary>
         internal void Observe(double milliseconds, bool saturated, float now)
         {
             if (!windowStarted || now < windowStart || now - windowStart > 2)
@@ -142,7 +160,8 @@ namespace BurritoRun
             bool frameReduction = false;
             if (milliseconds > 2 || saturated)
             {
-                goodSince = now;
+                // Isolated outliers within the measured window targets are still headroom.
+                // Sustained window pressure and actual reductions reset recovery below.
                 frameReduction = ++overruns >= 10 || saturated;
             }
             else overruns = Math.Max(0, overruns - 1);

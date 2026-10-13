@@ -44,6 +44,11 @@ namespace BurritoRun
 
         internal DeliveryService(Plugin plugin) { this.plugin = plugin; }
 
+        /// <summary>
+        /// Check whether a live local player is in a supported world for delivery.
+        /// The service depends on single-player ownership and an initialized inventory, not menu or
+        /// multiplayer actors.
+        /// </summary>
         internal bool CanOrder(Agent player)
         {
             var gc = GameController.gameController;
@@ -54,6 +59,12 @@ namespace BurritoRun
                 !player.dead && !player.ghost && player.inventory != null;
         }
 
+        /// <summary>
+        /// Validate payment and availability, choose a handoff address, and queue one paid
+        /// delivery.
+        /// An order belongs to the original address and world; later player movement must not
+        /// silently retarget it.
+        /// </summary>
         internal void Order(Agent player)
         {
             if (!CanOrder(player)) { plugin.Notice("Start a single-player run to place an order."); return; }
@@ -93,6 +104,11 @@ namespace BurritoRun
             if (entranceDelivery) plugin.Notice("Order accepted: $10. Indoor order: meet your driver OUTSIDE the building entrance.");
         }
 
+        /// <summary>
+        /// Advance courier spawn, routing, handoff, drops, interruption and refund handling.
+        /// Game-time deadlines pause with the world, while bounded route recovery avoids stranded
+        /// orders.
+        /// </summary>
         internal void Tick()
         {
             if (Time.unscaledTime < nextTick) return;
@@ -242,6 +258,11 @@ namespace BurritoRun
             plugin.Log($"BURRITO_SPAWN id={order.Id} courier={order.CourierId} at={candidate}");
         }
 
+        /// <summary>
+        /// Request an explicit test drop of the courier's existing package.
+        /// Exercising the ordinary ground-recovery path is more useful than reporting a synthetic
+        /// handoff.
+        /// </summary>
         internal void ForceDrop()
         {
             if (current?.Courier == null || current.Packet == null) { plugin.Notice("Wait until the courier has the package."); return; }
@@ -249,6 +270,10 @@ namespace BurritoRun
             Finish("test-drop", "TEST: Courier dropped the package. Go recover it.");
         }
 
+        /// <summary>
+        /// Seed one labeled reputation flag only in developer mode with a clear record.
+        /// Recovery checks can then exercise paid peaceful handoffs without staging an assault.
+        /// </summary>
         internal bool SeedSafetyFlagForTest()
         {
             if (!plugin.TestMode || reputation.Reports != 0) return false;
@@ -257,6 +282,11 @@ namespace BurritoRun
             return true;
         }
 
+        /// <summary>
+        /// Recognize the active courier's first observed native knock and report it.
+        /// Native knocking may happen before our optional destination knock, so the two paths must
+        /// share suppression.
+        /// </summary>
         internal void OnCourierKnocked(Door door, Agent courier)
         {
             var order = current;
@@ -267,6 +297,12 @@ namespace BurritoRun
             plugin.Notice("Driver: Knock knock. Food delivery! Nearby residents may answer.");
         }
 
+        /// <summary>
+        /// Apply the service's assault consequences when its customer hits an active or recently
+        /// released courier.
+        /// The bounded identity/time checks avoid turning unrelated world combat into a
+        /// driver-safety report.
+        /// </summary>
         internal void OnCourierHit(Agent victim, Agent attacker)
         {
             if (victim == null || attacker == null || !attacker.localPlayer || attacker.isPlayer <= 0) return;
@@ -294,6 +330,11 @@ namespace BurritoRun
                 : "You hit the courier! Service is pausing future orders.");
         }
 
+        /// <summary>
+        /// Clear the legacy delivery job and return its surviving courier to native wandering.
+        /// This older service uses dedicated courier cleanup, not the newer pickup probe's
+        /// exact-goal lease contract.
+        /// </summary>
         private void ReleaseCourier(DeliveryRequest order)
         {
             if (order.Courier == null || order.Courier.UID != order.CourierId || order.Courier.dead) return;
@@ -304,6 +345,11 @@ namespace BurritoRun
             order.Courier.SetDefaultGoal("WanderFar");
         }
 
+        /// <summary>
+        /// Close the order, release the courier and record its terminal outcome.
+        /// Only inventory handoff outcomes count toward peaceful recovery; a dropped or intercepted
+        /// package does not.
+        /// </summary>
         private void Finish(string outcome, string message)
         {
             var order = current;
@@ -325,6 +371,11 @@ namespace BurritoRun
             plugin.Notice(message);
         }
 
+        /// <summary>
+        /// End an order and, when allowed, return its payment now or defer the refund.
+        /// A refund may outlive the old level or player reference, so it cannot always be paid
+        /// immediately.
+        /// </summary>
         private void Cancel(string message, bool refund)
         {
             var order = current;
@@ -339,6 +390,11 @@ namespace BurritoRun
             Finish("cancelled", message);
         }
 
+        /// <summary>
+        /// Try to close a broken delivery without leaving the service permanently occupied.
+        /// Refund eligibility depends on whether food already entered the world; an exception must
+        /// not duplicate it.
+        /// </summary>
         internal void AbortAfterError()
         {
             if (current == null) return;

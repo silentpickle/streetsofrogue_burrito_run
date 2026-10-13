@@ -24,6 +24,11 @@ namespace BurritoRun
 
         internal AquariumService(Plugin plugin) { this.plugin = plugin; }
 
+        /// <summary>
+        /// Place a native Table with a drawn aquarium visual for the breakage experiment.
+        /// FishTank was not a registered spawn prefab; the Table supplies a real breakable native
+        /// base.
+        /// </summary>
         internal void SpawnTestTank(Agent player)
         {
             if (!plugin.TestMode || !plugin.Delivery.CanOrder(player))
@@ -73,6 +78,12 @@ namespace BurritoRun
             controller == GameController.gameController && controller.loadComplete &&
             controller.serverPlayer && !tank.destroying && !tank.destroyed;
 
+        /// <summary>
+        /// Consume this tank's break event, spill bounded native water and create temporary critter
+        /// visuals.
+        /// Exact tank/world identity and consuming the event first prevent unrelated or repeated
+        /// callbacks from duplicating effects.
+        /// </summary>
         internal void OnBroken(ObjectReal tank, PlayfieldObject damager)
         {
             if (tank == null || tank != testTank || tank.UID != testTankId ||
