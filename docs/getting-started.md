@@ -15,6 +15,9 @@ macOS command-line utilities, and BepInEx 5.4.23.5. The main plugin and profile
 patcher target `net472`; the linked policy test runner and InspectGame target
 `net7.0`. SDK upgrade/cross-platform support have not been tested.
 
+The full list of dependencies, where each comes from and where the build
+looks for it is in the [README dependency table](../README.md#dependencies).
+
 Before a fresh-machine build, account for these paths:
 
 | Location | Adaptation |

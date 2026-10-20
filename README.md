@@ -116,7 +116,28 @@ The existing toolchain is **macOS, .NET SDK 7, a locally owned game install,
 and BepInEx 5.4.23.5**. The plugin targets .NET Framework 4.7.2. This is a
 developer source release; Windows/Linux and clean-machine installation have
 not been verified. See setup instructions for machine-specific paths before
-running these commands from the repository root:
+running these commands from the repository root.
+
+### Dependencies
+
+None of these are checked in. A fresh clone gets the loader from `setup.sh`;
+the game's own libraries always come from your installed copy of the game.
+
+| Dependency | Used for | Where it comes from | Where the build looks |
+| --- | --- | --- | --- |
+| Streets of Rogue 1 (Steam) | The game being modded | Buy and install it yourself | `GameDir` (see [getting started](docs/getting-started.md)) |
+| Game libraries: `Assembly-CSharp`, `UnityEngine.*`, `Mirror`, `Newtonsoft.Json` | Compiling against the game's code | Your game install. Never downloaded or redistributed | `$GameDir/StreetsOfRogueMac.app/Contents/Resources/Data/Managed/` |
+| BepInEx 5.4.23.5 (macOS universal) | Loads the plugin into the game | `bash scripts/setup.sh` downloads it from the [BepInEx GitHub release](https://github.com/BepInEx/BepInEx/releases/tag/v5.4.23.5) and checks its SHA-256 | `.tools/loader/BepInEx/core/` |
+| HarmonyX (`0Harmony.dll`) | Patching game methods at runtime | Inside the BepInEx archive | `.tools/loader/BepInEx/core/` |
+| Mono.Cecil | Profile patcher (keeps prototype saves separate) and `tools/InspectGame` | Inside the BepInEx archive | `.tools/loader/BepInEx/core/` |
+| `Microsoft.NETFramework.ReferenceAssemblies` 1.0.3 | Building `net472` on macOS | NuGet, restored automatically by `dotnet` | `.tools/nuget/` |
+| .NET SDK 7, Python 3, bash, make | Build, checks and report scripts | Install yourself (`dotnet --list-sdks` should show 7.x) | Your `PATH` |
+
+If `curl` is blocked, download `BepInEx_macos_universal_5.4.23.5.zip` from the
+release page yourself, put it in `.tools/downloads/`, and rerun
+`bash scripts/setup.sh`: it skips the download and still checks the hash. A
+build that fails with dozens of `HarmonyLib` / `BepInEx` / `Mono` "could not be
+found" errors means `.tools/loader/` is missing; run setup.
 
 ```sh
 bash scripts/setup.sh                    # downloads verified loader; builds/installs
