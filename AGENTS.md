@@ -1,17 +1,21 @@
 # Agent entry point
 
-Start with [README.md](README.md) and [current state](docs/CURRENT_STATE.md).
+> **What this is:** Standing instructions for AI coding agents working in this repository.  
+> **Read it if:** Humans can skip it. Read it if you want to know what agents are told to do.  
+> **Status:** Current as of October 20, 2026.
+
+Start with [README.md](README.md) and [current state](docs/current-state.md).
 Behavior development is paused for a platform reassessment; historical next
 steps are retained research, not authorization to resume them. Follow the
 current user's scope.
 
 Before extending behavior, changing tooling, or preparing a release, read
-[the extension guide](docs/EXTENDING.md). It maps the reusable code, native
+[the extension guide](docs/reference/extending.md). It maps the reusable code, native
 inspection tools, checks, and evidence limits.
 
-For current checkout state, read [KNOWLEDGEBASE.md](KNOWLEDGEBASE.md) and
-[PAUSE_HANDOFF.md](PAUSE_HANDOFF.md); for the NPC experiment, use the current
-checkpoint at the top of [NPC_DESIRES_HANDOFF.md](NPC_DESIRES_HANDOFF.md).
+For current checkout state, read [knowledgebase.md](docs/history/knowledgebase.md) and
+[pause-handoff.md](docs/history/pause-handoff.md); for the NPC experiment, use the current
+checkpoint at the top of [desires-handoff.md](docs/experiments/03-npc/desires-handoff.md).
 
 Preserve existing changes, saves, and run evidence. Dog and aquarium work is
 parked and retained. Follow the current user's scope over historical next steps.
@@ -19,8 +23,8 @@ parked and retained. Follow the current user's scope over historical next steps.
 If using Qwen or another local thinking model, set temperature below 0.25 on a
 0–1 scale.
 
-For code orientation, use [architecture](docs/ARCHITECTURE.md); for known native
-calls or project methods, use [the method reference](docs/METHODS.md) before
+For code orientation, use [architecture](docs/architecture.md); for known native
+calls or project methods, use [the method reference](docs/reference/methods.md) before
 guessing APIs. Most types are internal, not an external SDK.
 
 Before editing, inspect `git status --short` and the relevant implementation.
@@ -37,10 +41,10 @@ inspection, replay, native fixtures and human acceptance; a logged action is
 not a verified outcome. Treat dated build/session IDs as historical until
 checked against the current process.
 
-For GitHub/source preparation, use [the publication guide](docs/PUBLISHING.md).
+For GitHub/source preparation, use [the publication guide](docs/maintainers/publishing.md).
 Keep game assemblies, `.tools/`, `.runtime/`, saves and private logs out of the
 public bundle; original source/docs use the root MIT license.
 Run the source-package content guard; a whole checkout, game folder, loader folder
 or build-output directory is not a player release. Use
-[the distribution audit](docs/DISTRIBUTION_AUDIT.md) for the intended add-on and
+[the distribution audit](docs/maintainers/distribution-audit.md) for the intended add-on and
 Workshop boundary before making distribution claims.

@@ -1,10 +1,14 @@
 # World Awareness push — 30 FPS contract
 
+> **What this is:** An earlier copy of the World Awareness plan, saved before consolidation.  
+> **Read it if:** You need the exact October 4 wording.  
+> **Status:** Dated working notes, kept as history. Build IDs, "current" and "next" refer to the date written, not today.
+
 The first deliverable is the read-only inspector and reusable query/capture service. Food/hydrant interests and movement recovery follow separately. No new dog behavior is part of this push.
 
 ## Resumed implementation — October 3, 2026
 
-The correctness audit fixed stale registry retention, actor activity filtering, effect-specific IDs, selected-target perception budgeting, mode-window mixing, writer failure loss accounting, bounded history and progressive incident export. Warmed 60-second benchmark trials now have a runtime producer and invalidation rules. Build/analyzers/format, linked C# checks and 35 Python tests pass. A native startup smoke passed; a native populated census and preliminary timing windows were captured. The enum-safe payload correction is installed as 0.6.0+20261004-050727; its populated F5 capture retest passed with zero terminal capture errors or drops in session bb128da0. The latest build adds darker panels and automatic nine-trial sequencing; comparative acceptance evidence remains pending. See `WORLD_AWARENESS_VALIDATION.md` for exact builds, evidence and remaining gates. M1–M4 remain provisional until native validation; M5 is pending.
+The correctness audit fixed stale registry retention, actor activity filtering, effect-specific IDs, selected-target perception budgeting, mode-window mixing, writer failure loss accounting, bounded history and progressive incident export. Warmed 60-second benchmark trials now have a runtime producer and invalidation rules. Build/analyzers/format, linked C# checks and 35 Python tests pass. A native startup smoke passed; a native populated census and preliminary timing windows were captured. The enum-safe payload correction is installed as 0.6.0+20261004-050727; its populated F5 capture retest passed with zero terminal capture errors or drops in session bb128da0. The latest build adds darker panels and automatic nine-trial sequencing; comparative acceptance evidence remains pending. See [validation.md](../experiments/01-world-awareness/validation.md) for exact builds, evidence and remaining gates. M1–M4 remain provisional until native validation; M5 is pending.
 
 ## Milestones
 

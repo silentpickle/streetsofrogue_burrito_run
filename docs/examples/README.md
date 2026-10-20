@@ -1,5 +1,9 @@
 # Portable native decision example
 
+> **What this is:** One real NPC decision captured from the game, small enough to read and replay offline.  
+> **Read it if:** You want a concrete example of the decision data, or to try the replay tool.  
+> **Status:** Current as of October 20, 2026.
+
 [npc-choice-v2.json](npc-choice-v2.json) is an unchanged exported native decision
 from October 20, 2026, session `1ad63b80`, build `0.6.0+20261020-200850`,
 capture sequence 635. It contains detached policy input/expected output only;
@@ -18,5 +22,5 @@ dotnet run --project tests/DeliveryRoute.Tests -c Release -- --npc-replay docs/e
 ```
 
 The command evaluates the captured input and compares the expected output. It
-does not launch the game or replay native movement. See [methods](../METHODS.md)
-and [setup](../GETTING_STARTED.md) for contracts and dependencies.
+does not launch the game or replay native movement. See [methods](../reference/methods.md)
+and [setup](../getting-started.md) for contracts and dependencies.

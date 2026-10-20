@@ -1,5 +1,9 @@
 # World Awareness catalog — October 4, 2026
 
+> **What this is:** An earlier copy of the World Awareness catalog, saved before consolidation.  
+> **Read it if:** You need the exact October 4 wording.  
+> **Status:** Dated working notes, kept as history. Build IDs, "current" and "next" refer to the date written, not today.
+
 ## State
 
 Build 0.6.0+20261004-050727; latest reviewed session bb128da0 ended cleanly. No code changes, rebuild, installation or launch were performed for this checkpoint. Work is uncommitted; the snapshot is a file backup, not a Git commit. Model switch is a user/app setting, not a plugin change.

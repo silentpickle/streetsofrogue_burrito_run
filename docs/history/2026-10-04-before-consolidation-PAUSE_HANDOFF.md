@@ -1,5 +1,9 @@
 # Latest source checkpoint — October 4, 2026
 
+> **What this is:** An earlier copy of the pause handoff, saved before the documents were consolidated.  
+> **Read it if:** You need the exact October 4 wording.  
+> **Status:** Dated working notes, kept as history. Build IDs, "current" and "next" refer to the date written, not today.
+
 ## October 4 prepared burst-budget correction (not installed)
 
 The busy stress sample revealed expensive lifecycle windows while quality stayed at 0. Source now captures lifecycle identity/classification/position/active state and transient Noise/Bullet/hazard fields immediately; actor/item/object detail and camera projection are deferred to the scheduled census/selected detail. Lifecycle snapshots explicitly label pending detail and unknown viewport via data.coverage. Pool GetComponent lookup is skipped when lifecycle capture is disabled and included in hook timing when enabled. Essential event ordering and bounded queue remain; loss counters are unchanged.
@@ -36,7 +40,7 @@ Earlier checkpoint history follows; this operational update takes precedence.
 
 # Current handoff — October 4, 2026: catalog before model switch
 
-User requested a durable checkpoint before switching to GPT-6.1 Sol because chat quota repeatedly interrupted log collection. Read `WORLD_AWARENESS_CHECKPOINT.md` first, then the plan/architecture/requirements/validation documents as needed. Do not repeat completed collection or rebuild merely to resume.
+User requested a durable checkpoint before switching to GPT-6.1 Sol because chat quota repeatedly interrupted log collection. Read [catalog.md](../experiments/01-world-awareness/catalog.md) first, then the plan/architecture/requirements/validation documents as needed. Do not repeat completed collection or rebuild merely to resume.
 
 Installed/last loaded build: **0.6.0+20261004-050727**. Latest reviewed session: **bb128da0**, now ended cleanly. Its terminal record confirms **errors=0, workerDrops=0, worldDrops=0**. F5 world incident (36 history frames) and six ordered legacy incident pages were captured successfully. The enum serialization repair is natively verified. Saved report: `.runtime/world-bb128da0-report.md`. Latest census: 384 entities. Latest live Record window: diagnostic mean 0.7317 ms, p95 1.6005 ms; frame p95 17.4528 ms. These are preliminary windows, not comparative benchmark acceptance.
 
@@ -77,15 +81,15 @@ The following handoffs are historical; the checkpoint above takes precedence.
 
 # Burrito Run — pause handoff (October 1, 2026, Denver time)
 
-This is the short operational checkpoint. `PROJECT_RECORD.md` holds the detailed experiments, failures, logs and implementation history; `ROADMAP.md` holds the next feature gates. No code or installed DLL was changed for this handoff.
+This is the short operational checkpoint. [project-record.md](project-record.md) holds the detailed experiments, failures, logs and implementation history; [roadmap.md](roadmap.md) holds the next feature gates. No code or installed DLL was changed for this handoff.
 
 ## October 2 continuation
 
-**Current logging checkpoint:** installed `0.5.5+20261002-231913`; read `LOGGING.md` for numeric capture and limits. Build/format, 86 linked checks, 18 report tests and startup smoke passed. Native no-pet rejection/incident capture works; populated NPC/environment/emission/movement capture still needs fixture verification. The check was closed. Prior DLLs: `.runtime/checkpoints/0.5.4-before-tracing/`. Next verify a native setup mechanism and fixture; automated start input did not advance in this check. Earlier paragraphs below are historical.
+**Current logging checkpoint:** installed `0.5.5+20261002-231913`; read [capture-and-reports.md](../reference/capture-and-reports.md) for numeric capture and limits. Build/format, 86 linked checks, 18 report tests and startup smoke passed. Native no-pet rejection/incident capture works; populated NPC/environment/emission/movement capture still needs fixture verification. The check was closed. Prior DLLs: `.runtime/checkpoints/0.5.4-before-tracing/`. Next verify a native setup mechanism and fixture; automated start input did not advance in this check. Earlier paragraphs below are historical.
 
-**Latest direction:** reduce user testing burden before adding behaviors. Read `TESTING_PLAN.md` first: improve complete attempt logging and NPC/environment capture, then build one repeatable native fixture. These are proposed changes only. Do not rebuild, launch or resume manual guard positioning just to repeat the prior test; the next implementation slice is observability. The installed build below remains unchanged by this review.
+**Latest direction:** reduce user testing burden before adding behaviors. Read [testing-plan.md](testing-plan.md) first: improve complete attempt logging and NPC/environment capture, then build one repeatable native fixture. These are proposed changes only. Do not rebuild, launch or resume manual guard positioning just to repeat the prior test; the next implementation slice is observability. The installed build below remains unchanged by this review.
 
-This October 1 stopping state is historical. The continuation verified panel-click spawning without a punch, following, snack approach and voluntary release on 0.5.2. The user flagged pet persistence across levels as **probably no** and chose barking for interaction per NPC. Installed build is now **0.5.4+20261002-190822**; compilation/format verification, 74 policy/input checks and startup smoke passed. F9/the panel runs a focused guard-distraction probe; automatic stranger barking starts off. Guard movement remains unproven live. The old installed DLLs are in `.runtime/checkpoints/0.5.2-before-barking/`. See `README.md` for the bark test and `PROJECT_RECORD.md` for current evidence; two automatic barks triggered logged native NPC noise reactions, but the user saw no consequences. Useful visible distraction, audio and successful manual emission remain unproven.
+This October 1 stopping state is historical. The continuation verified panel-click spawning without a punch, following, snack approach and voluntary release on 0.5.2. The user flagged pet persistence across levels as **probably no** and chose barking for interaction per NPC. Installed build is now **0.5.4+20261002-190822**; compilation/format verification, 74 policy/input checks and startup smoke passed. F9/the panel runs a focused guard-distraction probe; automatic stranger barking starts off. Guard movement remains unproven live. The old installed DLLs are in `.runtime/checkpoints/0.5.2-before-barking/`. See `README.md` for the bark test and [project-record.md](project-record.md) for current evidence; two automatic barks triggered logged native NPC noise reactions, but the user saw no consequences. Useful visible distraction, audio and successful manual emission remain unproven.
 
 ## Exact stopping state (October 1)
 
@@ -115,4 +119,4 @@ The practical architecture rule is to use native pathing, inventory, interaction
 
 ## Next safe slice, not a promise
 
-Check the user-visible 0.5.2 dog after a new-level spawn and the panel button itself. Then test the existing bounded dropped-burrito chase and F7 release. For extra comedy, first probe a non-spamming bark that can trigger an ordinary NPC response; keep hydrant pee and gut-eating behind native target/setting checks. Decide whether the Pet Store fixture makes the dog fun in an ordinary run before multiplying species or pursuing a larger rewrite. Courier/doorway, phone presentation and delivery-reputation reset are separate lanes in `ROADMAP.md`.
+Check the user-visible 0.5.2 dog after a new-level spawn and the panel button itself. Then test the existing bounded dropped-burrito chase and F7 release. For extra comedy, first probe a non-spamming bark that can trigger an ordinary NPC response; keep hydrant pee and gut-eating behind native target/setting checks. Decide whether the Pet Store fixture makes the dog fun in an ordinary run before multiplying species or pursuing a larger rewrite. Courier/doorway, phone presentation and delivery-reputation reset are separate lanes in [roadmap.md](roadmap.md).

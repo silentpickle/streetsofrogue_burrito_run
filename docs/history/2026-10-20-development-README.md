@@ -1,31 +1,35 @@
+> **What this is:** The README as it stood during development, with legacy controls and observations.  
+> **Read it if:** You need an old control or launch detail that the new README dropped.  
+> **Status:** Dated working notes, kept as history. Build IDs, "current" and "next" refer to the date written, not today.
+
 > Preserved development README, archived October 20, 2026. Relative links were adjusted for this location. Current entry point: [README](../../README.md).
 
 > **Current playable slice: banana favors.** Close the game, run `make build`, then
 > launch `play-banana-favors.command` and start a single-player run. Talk to either
 > marked neighbor, pick up the banana, and choose $15 or a First Aid Kit.
-> See [play instructions, scope and evidence](../../BANANA_QUEST.md). The phone is
+> See [play instructions, scope and evidence](../experiments/04-banana-favors.md). The phone is
 > preserved outside this flow; this remains a private local mod. Older experiments
 > below are retained history.
 
-> World Awareness 0.6.0 development build: F10 opens the paused inspector; F5 captures an incident. Benchmark controls are inside F10. See [validation and remaining gates](../../WORLD_AWARENESS_VALIDATION.md), [plan](../../WORLD_AWARENESS_PLAN.md), [architecture](../../WORLD_AWARENESS_ARCHITECTURE.md), and [requirements](../../WORLD_AWARENESS_REQUIREMENTS.md). Native gameplay/performance acceptance remains pending.
+> World Awareness 0.6.0 development build: F10 opens the paused inspector; F5 captures an incident. Benchmark controls are inside F10. See [validation and remaining gates](../experiments/01-world-awareness/validation.md), [plan](../experiments/01-world-awareness/plan.md), [architecture](../experiments/01-world-awareness/architecture.md), and [requirements](../experiments/01-world-awareness/requirements.md). Native gameplay/performance acceptance remains pending.
 
-For the repeatable native functional check, close the game and run **`make world-harness`**. It starts a separate profile, runs two fixture-owned actors, collects evidence, quits and writes an independently checked report. Two fresh launches have passed; see [harness workflow and scope](../../WORLD_AWARENESS_HARNESS.md). The base command leaves dog behavior alone. The separately authorized food interaction now has its own `make world-food` fixture; broader World Awareness acceptance remains open.
+For the repeatable native functional check, close the game and run **`make world-harness`**. It starts a separate profile, runs two fixture-owned actors, collects evidence, quits and writes an independently checked report. Two fresh launches have passed; see [harness workflow and scope](../experiments/01-world-awareness/harness.md). The base command leaves dog behavior alone. The separately authorized food interaction now has its own `make world-food` fixture; broader World Awareness acceptance remains open.
 
 # Burrito Run: private Streets of Rogue prototype
 
-This is the first playable experiment from `projectbrief.txt`: pay $10 through Services or a working computer, wait for a courier, and deal with whatever happens to the food and courier on the way. It uses the installed Streets of Rogue 1 game and its existing characters, pathing, inventory, and food rules. It is a private BepInEx plugin, not a Workshop upload.
+This is the first playable experiment from [original-brief.md](original-brief.md): pay $10 through Services or a working computer, wait for a courier, and deal with whatever happens to the food and courier on the way. It uses the installed Streets of Rogue 1 game and its existing characters, pathing, inventory, and food rules. It is a private BepInEx plugin, not a Workshop upload.
 
-For current operational restart notes, see [PAUSE_HANDOFF.md](../../PAUSE_HANDOFF.md). The complete experiment history, failed paths, file map, safety boundaries and test matrix are in [PROJECT_RECORD.md](../../PROJECT_RECORD.md); feature gates are in [ROADMAP.md](../../ROADMAP.md).
+For current operational restart notes, see [pause-handoff.md](pause-handoff.md). The complete experiment history, failed paths, file map, safety boundaries and test matrix are in [project-record.md](project-record.md); feature gates are in [roadmap.md](roadmap.md).
 
 **Extending the mod with an AI agent?** Start with [AGENTS.md](../../AGENTS.md) and
-[the extension guide](../../docs/EXTENDING.md) for reusable world/NPC tooling, native
+[the extension guide](../reference/extending.md) for reusable world/NPC tooling, native
 assembly inspection, replay, automated fixtures, and known setup limits.
 
 ## Current focus — October 7
 
-World Awareness 0.6.0 provides read-only queries, numeric perception/navigation evidence, an overlay, paused inspection and buffered recording. Automatic sustained-window/crowded-detail/backpressure, controlled classification/API pause/scope-reset and nine-trial controlled busy checks now pass. Food interaction has passed its native fixture and the user judged the dog decent in ordinary play. The user selected **just hydrant interest** next; see [hydrant scope and evidence](../../HYDRANT_INTERACTION_PLAN.md). Full release acceptance remains open, including physical input paths, combat/hazard equivalence, allocations and other hardware.
+World Awareness 0.6.0 provides read-only queries, numeric perception/navigation evidence, an overlay, paused inspection and buffered recording. Automatic sustained-window/crowded-detail/backpressure, controlled classification/API pause/scope-reset and nine-trial controlled busy checks now pass. Food interaction has passed its native fixture and the user judged the dog decent in ordinary play. The user selected **just hydrant interest** next; see [hydrant scope and evidence](../experiments/02-dog/hydrant.md). Full release acceptance remains open, including physical input paths, combat/hazard equivalence, allocations and other hardware.
 
-Use [PAUSE_HANDOFF.md](../../PAUSE_HANDOFF.md) for the exact loaded/prepared build and next test, and [KNOWLEDGEBASE.md](../../KNOWLEDGEBASE.md) as the documentation map. These replace older “latest installed” checkpoint prose. Dog following/snack attention/release have prior observations; cross-level persistence remains “probably no.” The Services interface remains an IMGUI app shell, and the aquarium effect is parked. Feature descriptions below retain their historical versions and limited evidence.
+Use [pause-handoff.md](pause-handoff.md) for the exact loaded/prepared build and next test, and [knowledgebase.md](knowledgebase.md) as the documentation map. These replace older “latest installed” checkpoint prose. Dog following/snack attention/release have prior observations; cross-level persistence remains “probably no.” The Services interface remains an IMGUI app shell, and the aquarium effect is parked. Feature descriptions below retain their historical versions and limited evidence.
 
 ## Play it on this Mac
 
@@ -53,7 +57,7 @@ The short procedural woof is placeholder audio routed through the game's effects
 
 In a quick-test single-player level, press **F6** or **Spawn test dog** once. Walk a short distance to check native following. **Drop one test snack** supplies and drops one free Delivery Burrito if you do not already carry one. The dog finds single dropped Delivery Burrito/HotFud through World Awareness, approaches for up to eight game seconds, and returns to following. Healthy dogs sniff and leave the food; injured dogs use native pickup/eating and heal. Stacks, quest/stealable items and unpickable/airborne food are rejected. There is an eight-second cooldown. **F7 / Release test dog** stops its food interest and restores native wandering. Combat interrupts a detour; pause/phone input suspends food processing. Logs include `BURRITO_PET_FOOD` with actual count/health outcomes and target activation keys.
 
-For an automatic visible trial, close the game and run **`make world-food`**. It starts a disposable profile, spawns the dog and food, sets up a small nonlethal injury only on that owned dog, checks five cases and saves the report before quitting. No NPC hunting, positioning, punching or inspector setup is required. Bring the game to the front during startup and keep focus stable while watching. See [food plan and evidence](../../FOOD_INTERACTION_PLAN.md). Actual approach/eating/native follow are tested; visual clarity and usefulness still need your judgment.
+For an automatic visible trial, close the game and run **`make world-food`**. It starts a disposable profile, spawns the dog and food, sets up a small nonlethal injury only on that owned dog, checks five cases and saves the report before quitting. No NPC hunting, positioning, punching or inspector setup is required. Bring the game to the front during startup and keep focus stable while watching. See [food plan and evidence](../experiments/02-dog/food.md). Actual approach/eating/native follow are tested; visual clarity and usefulness still need your judgment.
 
 The dog remains a drawn visual over a native Courier, with one pet per level. No Pet Store, adoption, cross-level persistence or broad animal simulation exists. Automatic stranger barking remains off by default; the separate bark experiment is described above.
 
@@ -61,7 +65,7 @@ The dog remains a drawn visual over a native Courier, with one pet per level. No
 
 A following dog can notice an intact visible native hydrant within four units, make a short native detour, raise a leg with cosmetic droplets for 1.25 game seconds, and return to following. Each hydrant gets one visit per level; interests have a 45-second cooldown. The hydrant remains intact and the effect does not make native water or slippery tiles. Target loss, combat, owner separation, release and an eight-second approach deadline cancel the interest.
 
-**Place one test hydrant** supplies one nearby fixture per quick-test level, after **F6 / Spawn test dog**. Ordinary level hydrants also work. `make world-hydrant` runs isolated automatic approach/mark/return, removal, timeout, release, repeat-suppression and cleanup checks; this harness deliberately removes its dog and quits. A normal `bash scripts/launch.sh --burrito-test` playtest stays open. See [plan and exact reports](../../HYDRANT_INTERACTION_PLAN.md).
+**Place one test hydrant** supplies one nearby fixture per quick-test level, after **F6 / Spawn test dog**. Ordinary level hydrants also work. `make world-hydrant` runs isolated automatic approach/mark/return, removal, timeout, release, repeat-suppression and cleanup checks; this harness deliberately removes its dog and quits. A normal `bash scripts/launch.sh --burrito-test` playtest stays open. See [plan and exact reports](../experiments/02-dog/hydrant.md).
 
 ### Quick-test scenarios and incident logs (0.3.1)
 
@@ -143,4 +147,4 @@ These checks cover part of what Knip does for JavaScript. They do not prove that
 
 The smoke test verifies loader/profile-patcher/plugin startup; delivery, combat, and other gameplay still require a live run. The current SDK is 7.0.305; this setup keeps the existing toolchain rather than upgrading it.
 
-Native World Awareness checks use fresh disposable profiles and collect/report automatically: `make world-harness`, `make world-performance`, `make world-pressure`, `make world-advanced`, `make world-native`, and `make world-busy`. Close the game before starting a command. See [harness workflow and limits](../../WORLD_AWARENESS_HARNESS.md) and [roadmap execution](../../WORLD_AWARENESS_TO_DOG_PLAN.md).
+Native World Awareness checks use fresh disposable profiles and collect/report automatically: `make world-harness`, `make world-performance`, `make world-pressure`, `make world-advanced`, `make world-native`, and `make world-busy`. Close the game before starting a command. See [harness workflow and limits](../experiments/01-world-awareness/harness.md) and [roadmap execution](../experiments/02-dog/road-to-the-dog.md).

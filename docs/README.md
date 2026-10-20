@@ -1,41 +1,55 @@
 # Documentation map
 
-New readers should begin at the [repository README](../README.md).
+Read from the top down and stop when you know enough. Each level assumes
+only the one above it.
 
-| Question | Guide |
-| --- | --- |
-| What can I run, and what paths need adapting? | [Getting started](GETTING_STARTED.md) |
-| What exists and how strong is the evidence? | [Current state](CURRENT_STATE.md) |
-| How is the code organized? | [Architecture](ARCHITECTURE.md) |
-| What do known methods do? | [Method reference](METHODS.md) |
-| What do the tools look like? | [Screenshot gallery](SCREENSHOTS.md) |
-| Why pause, what was parked, and what might follow? | [Ethos and future](ETHOS_AND_FUTURE.md) |
-| How should an agent extend it? | [AGENTS](../AGENTS.md), [extension workflow](EXTENDING.md) |
-| How do I publish source? | [Publishing](PUBLISHING.md), [preparation receipt](PUBLICATION_CHECK.md) |
-| Does the package include game files? | [Distribution audit and plugin/Workshop boundary](DISTRIBUTION_AUDIT.md) |
+## 10,000 ft: what is this?
 
-## Subsystem references
+- [Repository README](../README.md): the idea, what exists, and a screenshot. Five minutes.
+- [Original brief](history/original-brief.md): the pitch that started it, in the author's words.
 
-| Subject | Documents |
-| --- | --- |
-| NPC controls and replay | [NPC_DESIRES](../NPC_DESIRES.md), [current coordination](../NPC_COORDINATION.md), [historical handoff](../NPC_DESIRES_HANDOFF.md) |
-| Native services, property, fear and dialogue | [Interaction audit](../NPC_INTERACTIONS_AUDIT.md), [dialogue/behavior map](../NPC_DIALOGUE_BEHAVIOR_MAP.md), [item catalog](../ITEM_CATALOG_2026-10-07.md) |
-| Banana favor | [Implementation and evidence](../BANANA_QUEST.md) |
-| World contracts and budgets | [Architecture](../WORLD_AWARENESS_ARCHITECTURE.md), [milestones](../WORLD_AWARENESS_PLAN.md), [requirements](../WORLD_AWARENESS_REQUIREMENTS.md) |
-| Native checks and capture | [Harness](../WORLD_AWARENESS_HARNESS.md), [validation](../WORLD_AWARENESS_VALIDATION.md), [logging](../LOGGING.md) |
-| Dog slices | [Food](../FOOD_INTERACTION_PLAN.md), [hydrant](../HYDRANT_INTERACTION_PLAN.md), [readiness roadmap](../WORLD_AWARENESS_TO_DOG_PLAN.md) |
+## 1,000 ft: what was built, and does it work?
 
-## Preserved research and operational history
+- [Current state](current-state.md): one page on what works, what does not, and how strong the evidence is.
+- [The experiments, in order](experiments/README.md): a timeline of the three weeks of work, and why each step led to the next.
+- [Ethos and future](ethos-and-future.md): why it paused, and the open questions.
+- [Screenshots](screenshots.md): what the tools look like.
 
-[KNOWLEDGEBASE](../KNOWLEDGEBASE.md), [PAUSE_HANDOFF](../PAUSE_HANDOFF.md),
-[WORLD_AWARENESS_CHECKPOINT](../WORLD_AWARENESS_CHECKPOINT.md),
-[PROJECT_RECORD](../PROJECT_RECORD.md), [ROADMAP](../ROADMAP.md),
-[TESTING_PLAN](../TESTING_PLAN.md), [pressure plan](../WORLD_AWARENESS_PRESSURE_PLAN.md),
-[performance plan](../WORLD_AWARENESS_PERFORMANCE_PLAN.md), and
-[the old development README](history/2026-10-20-development-README.md) preserve
-investigations, failed assumptions and exact local evidence pointers.
+## 100 ft: how does it fit together?
 
-Read dates and corrections before using an old “next” or “installed” statement.
-Links into ignored `.runtime/` describe maintainer-local artifacts, not missing
-source dependencies. Preserve their provenance rather than promoting them to
-current proof.
+- [Getting started](getting-started.md): build it, launch it, run the checks.
+- [Architecture](architecture.md): the observe, decide, act, check loop and a map of the source files.
+- One folder per experiment, each with its own README and reading order:
+  1. [World Awareness](experiments/01-world-awareness/README.md)
+  2. [The dog](experiments/02-dog/README.md)
+  3. [NPC desires and coordination](experiments/03-npc/README.md)
+  4. [Banana favors](experiments/04-banana-favors.md)
+
+## 10 ft: working on it
+
+- [Contributing](../CONTRIBUTING.md): what to check and preserve when changing things.
+- [Extending](reference/extending.md): the workflow for adding behaviour, by hand or with an agent.
+- [Reference](reference/README.md): method lookup, capture format, item catalog.
+- [Example decision](examples/README.md): a real captured NPC choice you can replay offline.
+
+## 0.1 in: the evidence and the source
+
+- Each experiment folder's validation and plan pages: every test run, build ID and number.
+- [History](history/README.md): the dated working notes, dead ends included.
+- The source itself: key functions have plain-English header comments explaining
+  what they do and why.
+
+## Other
+
+- [Maintainers](maintainers/README.md): packaging and publishing the source ZIP.
+- [AGENTS.md](../AGENTS.md): standing instructions for AI coding agents.
+- [Third-party notices](../THIRD_PARTY_NOTICES.md): what the MIT license does and does not cover.
+
+### A note on how these were written
+
+Most of these documents were written by AI coding agents during development,
+for other agents. Every page now opens with a short **What this is / Read it if /
+Status** box for human readers. The text below that box is the original, and can be
+dense. Dates matter: in a page marked as dated, "current" means current on that
+date. Links into `.runtime/` point at the author's local evidence files, which are
+not part of this repository.
