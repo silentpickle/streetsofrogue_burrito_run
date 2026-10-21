@@ -514,7 +514,7 @@ bash -n scripts/setup.sh scripts/build.sh scripts/launch.sh quick-test.command p
 bash scripts/build.sh
 rg 'BURRITO_|Exception|Error' .tools/loader/BepInEx/LogOutput.log
 cmp .runtime/backups/CloudData-before-prototype/SavedGame.dat \
-  '/Users/davidcrandall/Library/Application Support/com.Streets-of-Rogue.Streets-of-Rogue/CloudData/SavedGame.dat'
+  "$HOME/Library/Application Support/com.Streets-of-Rogue.Streets-of-Rogue/CloudData/SavedGame.dat"
 ```
 
 At the final documentation check, shell syntax validation succeeded; the `cmp` comparison returned 0 (identical), and the latest active plugin log had the complete successful delivery sequence without a plugin error. Earlier builds were reported as zero-warning/zero-error, but this documentation pass did **not** rebuild or relaunch the game: replacing DLLs while a user is playing would muddle the test and could require a restart. Re-run the build after changing source, with the game closed. Do not use `cmp` as a blanket safety certificate: it compares only the named saved-game file. Log names include timestamps and launcher PIDs, so choose the session matching the actual test rather than assuming the lexically latest filename is always the one you want.

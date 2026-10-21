@@ -5,8 +5,6 @@
     <AssemblyName>BurritoRun</AssemblyName>
     <Version>0.6.0</Version>
     <InformationalVersion>$(Version)+$([System.DateTime]::UtcNow.ToString('yyyyMMdd-HHmmss'))</InformationalVersion>
-    <GameDir Condition="'$(GameDir)' == ''">/Users/davidcrandall/Library/Application Support/Steam/steamapps/common/Streets of Rogue</GameDir>
-    <ManagedDir>$(GameDir)/StreetsOfRogueMac.app/Contents/Resources/Data/Managed</ManagedDir>
     <LoaderDir>$(MSBuildProjectDirectory)/../../.tools/loader/BepInEx/core</LoaderDir>
   </PropertyGroup>
   <ItemGroup>

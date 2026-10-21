@@ -1,7 +1,8 @@
 #!/bin/bash
 set -euo pipefail
 project_dir="$(cd "$(dirname "$0")/.." && pwd)"
-game_app="${SOR_GAME_APP:-/Users/davidcrandall/Library/Application Support/Steam/steamapps/common/Streets of Rogue/StreetsOfRogueMac.app}"
+source "$project_dir/scripts/game-paths.sh"
+game_app="$SOR_GAME_APP"
 loader_dir="$project_dir/.tools/loader"
 if [[ "$game_app" == *.app ]]; then
     executable_name="$(plutil -extract CFBundleExecutable raw -o - "$game_app/Contents/Info.plist")"
@@ -25,7 +26,7 @@ export BURRITO_PROFILE_PATH="${BURRITO_PROFILE_PATH:-$project_dir/.runtime/profi
 log_dir="$(dirname "$BURRITO_PROFILE_PATH")/logs"
 mkdir -p "$BURRITO_PROFILE_PATH/CloudData" "$BURRITO_PROFILE_PATH/BackupData" "$log_dir"
 if [ ! -f "$BURRITO_PROFILE_PATH/.initialized" ]; then
-    original_profile='/Users/davidcrandall/Library/Application Support/com.Streets-of-Rogue.Streets-of-Rogue/CloudData'
+    original_profile="$SOR_ORIGINAL_PROFILE"
     for name in GameUnlocks.dat GameSettings.dat; do
         if [ -f "$original_profile/$name" ]; then
             cp -p "$original_profile/$name" "$BURRITO_PROFILE_PATH/CloudData/$name"

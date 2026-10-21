@@ -14,7 +14,7 @@ Fud scores 5−2=3 and Banana scores 8−2=6, so the policy requests Banana pick
 This input/output example does not itself establish the later native transfer.
 The enclosing local native run passed its independent outcome reader.
 
-After configuring the linked test runner's Newtonsoft reference, replay it from
+With the installation paths in [GamePaths.props](../../GamePaths.props) configured, replay it from
 the repository root:
 
 ```sh

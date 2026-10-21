@@ -120,7 +120,8 @@ The scripts currently target the development Mac. `scripts/setup.sh` downloads a
 pinned, checksum-verified Mac BepInEx loader and builds/installs locally; it is not
 a portable player installer. The plugin project, test project's Newtonsoft.Json
 reference, launch/profile paths, and harness process checks need review on a new
-machine. `GameDir` alone does not remove the Mac-specific managed-assembly layout.
+machine. Installation paths are shared through `GamePaths.props`; `GameDir` alone
+does not remove the Mac-specific managed-assembly layout.
 The inspection tool also references Mono.Cecil from the local loader. Native
 harnesses require an initialized prototype profile with `TechSettings.dat`.
 

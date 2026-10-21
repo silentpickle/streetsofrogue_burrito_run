@@ -1,4 +1,5 @@
 <Project>
+  <Import Project="$(MSBuildThisFileDirectory)GamePaths.props" />
   <PropertyGroup>
     <!-- Opt in for net472; these analyzers ship with the installed SDK. -->
     <EnableNETAnalyzers>true</EnableNETAnalyzers>

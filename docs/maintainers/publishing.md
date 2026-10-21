@@ -71,7 +71,7 @@ readers; the current docs explain their provenance and reproduction commands.
 
 ## Remaining boundaries to state publicly
 
-- Mac developer setup, absolute path edits and the existing .NET 7 toolchain;
+- Mac developer setup, installation-path configuration and the existing .NET 7 toolchain;
   no verified clean-machine or Windows/Linux installation.
 - Controlled native checks versus unfinished ordinary-resident acceptance.
 - No stable SDK, general NPC-to-NPC social simulation or model integration.

@@ -22,6 +22,6 @@
     <Compile Include="../../src/BurritoRun/WorldIndex.cs" Link="WorldIndex.cs" />
     <Compile Include="../../src/BurritoRun/CaptureWorker.cs" Link="CaptureWorker.cs" />
     <Compile Include="../../src/BurritoRun/WorldJournal.cs" Link="WorldJournal.cs" />
-    <Reference Include="Newtonsoft.Json"><HintPath>/Users/davidcrandall/Library/Application Support/Steam/steamapps/common/Streets of Rogue/StreetsOfRogueMac.app/Contents/Resources/Data/Managed/Newtonsoft.Json.dll</HintPath></Reference>
+    <Reference Include="Newtonsoft.Json"><HintPath>$(ManagedDir)/Newtonsoft.Json.dll</HintPath></Reference>
   </ItemGroup>
 </Project>

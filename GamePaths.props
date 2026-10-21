@@ -1,0 +1,11 @@
+<Project>
+  <!-- Shared by MSBuild and scripts/game-paths.sh. Keep these as ordered defaults:
+       only $(PROPERTY) substitution is supported by the shell reader.
+       Export an environment variable to override a path without editing this file. -->
+  <PropertyGroup>
+    <GameDir Condition="'$(GameDir)' == ''">$(HOME)/Library/Application Support/Steam/steamapps/common/Streets of Rogue</GameDir>
+    <SOR_GAME_APP Condition="'$(SOR_GAME_APP)' == ''">$(GameDir)/StreetsOfRogueMac.app</SOR_GAME_APP>
+    <ManagedDir Condition="'$(ManagedDir)' == ''">$(SOR_GAME_APP)/Contents/Resources/Data/Managed</ManagedDir>
+    <SOR_ORIGINAL_PROFILE Condition="'$(SOR_ORIGINAL_PROFILE)' == ''">$(HOME)/Library/Application Support/com.Streets-of-Rogue.Streets-of-Rogue/CloudData</SOR_ORIGINAL_PROFILE>
+  </PropertyGroup>
+</Project>

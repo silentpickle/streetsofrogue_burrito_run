@@ -18,27 +18,41 @@ patcher target `net472`; the linked policy test runner and InspectGame target
 The full list of dependencies, where each comes from and where the build
 looks for it is in the [README dependency table](../README.md#dependencies).
 
-Before a fresh-machine build, account for these paths:
+Installation defaults are centralized in [GamePaths.props](../GamePaths.props).
+MSBuild imports it for every project; the launcher reads the same values through
+`scripts/game-paths.sh`. Paths default to the current user's macOS Steam library
+and save-settings directory. Environment overrides take precedence over defaults.
 
-| Location | Adaptation |
+| Setting | Default / purpose |
 | --- | --- |
-| `src/BurritoRun/BurritoRun.csproj` | `GameDir` defaults to the original developer's Steam folder. Override it as below. `ManagedDir` still assumes the Mac app layout. |
-| `tests/DeliveryRoute.Tests/DeliveryRoute.Tests.csproj` | The Newtonsoft.Json HintPath is absolute. Change it to your game's `Contents/Resources/Data/Managed/Newtonsoft.Json.dll` before running linked tests. |
-| `scripts/launch.sh` | `SOR_GAME_APP` overrides the executable/app. `original_profile` still names the developer's normal CloudData folder; adapt it if you want the initial unlock/settings copy. |
-| `scripts/world-harness.sh` | Process guard assumes the Mac executable name; fixtures copy settings from `.runtime/profile` and require its `TechSettings.dat`. |
-| `tools/InspectGame/InspectGame.csproj` | Mono.Cecil comes from `.tools/loader/BepInEx/core/` after setup. |
+| `GameDir` | `$HOME/Library/Application Support/Steam/steamapps/common/Streets of Rogue` |
+| `SOR_GAME_APP` | `GameDir` plus `/StreetsOfRogueMac.app`; launcher app/executable |
+| `ManagedDir` | `SOR_GAME_APP` plus `/Contents/Resources/Data/Managed`; plugin and linked tests share these game libraries |
+| `SOR_ORIGINAL_PROFILE` | `$HOME/Library/Application Support/com.Streets-of-Rogue.Streets-of-Rogue/CloudData`; only initial settings/unlocks are copied, not saved runs |
 
-On a Mac with the same Steam app layout:
+The standard Steam location needs no configuration. For another library:
 
 ```sh
-export GameDir="$HOME/Library/Application Support/Steam/steamapps/common/Streets of Rogue"
-export SOR_GAME_APP="$GameDir/StreetsOfRogueMac.app"
+export GameDir="/Volumes/Games/SteamLibrary/steamapps/common/Streets of Rogue"
+bash scripts/game-paths.sh
 ```
 
-MSBuild inherits `GameDir`; keep it exported for later builds/checks. Another
-valid build invocation is `bash scripts/build.sh "/p:GameDir=$GameDir"`.
-Changing only GameDir does not port the loader, managed layout or process guard.
-Paths still needing edits above are known limitations, not a verified fresh-machine recipe.
+Use absolute paths. Keep overrides exported for subsequent commands, including
+direct `dotnet` builds and replay. `bash scripts/game-paths.sh` prints resolved
+paths without launching the game or copying saves; sourcing it exports defaults
+into your current shell if needed. An MSBuild-only `/p:GameDir=...` override also
+works for a build but does not configure a later launch.
+
+Finder double-click launchers do not inherit exports from a terminal: edit
+`GamePaths.props` for a persistent nonstandard installation. Keep its entries as
+ordered defaults with `$(PROPERTY)` substitutions; the shell reader intentionally
+does not evaluate arbitrary MSBuild expressions or shell commands. If launching
+a bare executable, also set `ManagedDir` to its managed-library directory.
+
+The loader and process guard still assume macOS and the standard game executable
+name. Harnesses copy settings from `.runtime/profile` and need its
+`TechSettings.dat`. Mono.Cecil still comes from the local loader after setup.
+Central paths do not establish cross-platform or clean-machine compatibility.
 
 ## Setup and first launch
 
@@ -95,8 +109,8 @@ launch a new profile, collect evidence, quit and write `report.md` / `report.jso
 with saved build/hash/run identity. `make npc-desires` also exports `npc-replays/`.
 Use `make help` for longer performance/pressure suites; some take about 11 minutes.
 
-Replay a captured policy decision without launching the game, after adapting
-the test project's dependency path:
+Replay a captured policy decision without launching the game, using the same
+installation settings as the plugin build:
 
 ```sh
 dotnet run --project tests/DeliveryRoute.Tests -c Release -- --npc-replay docs/examples/npc-choice-v2.json
@@ -109,7 +123,7 @@ you can inspect it without the game or the linked test runner.
 
 | Symptom | Check |
 | --- | --- |
-| Missing game/Unity/Newtonsoft references | GameDir, Mac ManagedDir layout, loader extraction and test HintPath |
+| Missing game/Unity/Newtonsoft references | Run `bash scripts/game-paths.sh`; verify `ManagedDir` contains the game DLLs and the loader has been extracted |
 | No build label | Current process was likely launched outside the private loader; close it and use the repository launcher |
 | Process-list failure | The guard refuses safely when it cannot enumerate processes; grant the execution environment access rather than removing the guard |
 | Harness refuses missing TechSettings | Initialize the separate prototype profile once through normal startup |

@@ -64,8 +64,9 @@ handoff cannot establish the installed DLL.
 
 ## Practical limitations
 
-Mac layout and absolute development paths remain in build/test/launch
-configuration. There is no supported installer, stable external API, verified
+Build, test and launch installation paths share `GamePaths.props`, with defaults
+under the current user's home directory and environment overrides. The Mac layout
+and process guards remain platform-specific. There is no supported installer, stable external API, verified
 Windows/Linux port or established Workshop code-installation flow. The SDK is
 the existing .NET 7 toolchain; an upgrade has not been evaluated. The profile
 patcher redirects save-path calls in memory and fails when it cannot patch them.
